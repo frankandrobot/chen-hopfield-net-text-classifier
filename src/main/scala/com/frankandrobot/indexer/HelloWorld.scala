@@ -24,11 +24,8 @@ class Indexer {
       .filter(stopWords.isNotStopWord)
       .filter(_filterOutNonAlphanumeric)
       .map(stemmer.stem)
-      .sliding(termSize)
-      //.map(f => {println(f.toList.toString); f})
-      .foldLeft(List[String]())(_collectTerms)
 
-    return iteratee
+    return _consecutiveTerms(iteratee)
   }
 
   private def _filterOutNonAlphanumeric(word : (String, Int)) : Boolean = {
@@ -41,75 +38,27 @@ class Indexer {
     }
   }
 
-  /**
-    * Ex: [1] => 1
-    * Ex: [1,2] => 1 2
-    * Ex: [1,2,3] => 1 2 3
-    *
-    * @param list
-    * @return
-    */
-  private def _concat(list : Seq[String]) : String = {
+  type TokenType = (String, Int)
 
-    return list.reverse mkString " "
+  private def _consecutiveTerms(tokens : Seq[TokenType]) : List[String] = {
+
+    val tokenTypeList = tokens.foldLeft(List[TokenType]())(_concatTerms)
+
+    return tokenTypeList.map(_._1)
   }
 
-  /**
-    * Build terms.
-    *
-    * A "term" is every consecutive sequence of every length in the list.
-    *
-    * Ex: (1,2,3) => (1,2,3,12,23,123)
-    *
-    * @param list
-    * @return
-    */
-  private def _buildTerms(list : List[String]) : List[String] = {
+  private def _concatTerms(total : List[TokenType], cur : TokenType) : List[TokenType] = {
 
-    return (1 to list.length).foldLeft(List[String]()) { (total, cur) =>
-
-      val allConsecutiveSeqsOfSizeCur = list.sliding(cur).toList
-      val terms = allConsecutiveSeqsOfSizeCur.map(_concat)
-
-      terms.toList ++ total
+    total match {
+      case Nil => cur :: Nil
+      case a :: Nil => cur :: _concatTerms(cur, a) :: total
+      case a :: b :: rest => cur :: _concatTerms(cur, a) :: _concatTerms(cur, b) :: total
     }
   }
 
-  private def _consecutiveTerms(list : Seq[(String, Int)]) : List[String] = {
+  private def _concatTerms(a : TokenType, b : TokenType) = (b._1 + " " + a._1, a._2)
 
-    val iteratee = list.zipWithIndex.foldLeft(Iteratee()){ (total, cur) => {
-
-      val curTerm = cur._1._1
-      val curPos = cur._1._2
-      val curPosInList = cur._2
-
-      total.prevPos match {
-        case n if (n == curPos - 1 && curPosInList < list.length - 1) =>
-          Iteratee(prevPos = curPos, rawTerms = curTerm :: total.rawTerms)
-        case n if (n == curPos - 1 && curPosInList == list.length - 1) =>
-          Iteratee(terms = _buildTerms(curTerm :: total.rawTerms) ++ total.terms, prevPos = curPos)
-        case _ =>
-          Iteratee(terms = _buildTerms(total.rawTerms) ++ total.terms, prevPos = curPos, rawTerms = List(curTerm))
-      }
-    }}
-
-    return iteratee.rawTerms ++ iteratee.terms
-  }
-
-  private def _collectTerms(total : List[String], tokens : Seq[(String, Int)]) : List[String] = {
-
-    return _consecutiveTerms(tokens) ++ total
-  }
 }
-
-case class Iteratee(val terms : List[String] = List[String](),
-                    val prevPos : Int = -1,
-                    val rawTerms : List[String] = List[String]())
-
-// 1
-// 2
-// 12
-// {123, 23} {12, 2}
 
 class Tokenizer {
 
@@ -144,6 +93,6 @@ object HelloWorld extends App {
   val i = new Indexer
 
   //println(i.index("Some languages (like Haskell) are lazy: every expression’s evaluation waits for its (first) use.").toString)
-  println(i.index("lazy languages Haskell evaluation").reverse.toString)
-
+  println(i.index("one two three four").reverse.toString)
+  println(i.index("one two three four").length)
 }
