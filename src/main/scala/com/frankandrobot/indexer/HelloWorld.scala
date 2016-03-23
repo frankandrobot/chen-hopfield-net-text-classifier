@@ -51,13 +51,38 @@ class Indexer {
 
     total match {
       case Nil => cur :: Nil
-      case a :: Nil => cur :: _concatTerms(cur, a) :: total
-      case a :: b :: rest => cur :: _concatTerms(cur, a) :: _concatTerms(cur, b) :: total
+      case a :: Nil => {
+
+        val x = _concatTerms(cur, a)
+
+        x match {
+          case Some(x) => cur :: x :: total
+          case _ => cur :: total
+        }
+        // returns cur :: _concatTerms(cur, a) :: total
+      }
+      case a :: b :: rest => {
+
+        val x = _concatTerms(cur, a)
+        val y = _concatTerms(cur, b)
+
+        val list = y match {
+          case Some(y) => y :: total
+          case _ => total
+        }
+
+        x match {
+          case Some(x) => cur :: x :: list
+          case None => cur :: list
+        }
+        //returns cur :: _concatTerms(cur, a) :: _concatTerms(cur, b) :: total
+      }
     }
   }
 
-  private def _concatTerms(a : TokenType, b : TokenType) = (b._1 + " " + a._1, a._2)
-
+  private def _concatTerms(a : TokenType, b : TokenType) : Option[TokenType] =
+    if (b._2 == a._2 - 1) { Some((b._1 + " " + a._1, a._2)) }
+    else { None }
 }
 
 class Tokenizer {
@@ -93,6 +118,6 @@ object HelloWorld extends App {
   val i = new Indexer
 
   //println(i.index("Some languages (like Haskell) are lazy: every expression’s evaluation waits for its (first) use.").toString)
-  println(i.index("one two three four").reverse.toString)
-  println(i.index("one two three four").length)
+  println(i.index("one two, three four").reverse.toString)
+  println(i.index("one two, three four").length)
 }
