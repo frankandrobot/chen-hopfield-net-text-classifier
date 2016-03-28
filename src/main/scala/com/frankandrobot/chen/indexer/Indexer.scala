@@ -1,4 +1,4 @@
-package com.frankandrobot.indexer
+package com.frankandrobot.chen.indexer
 
 import java.io.FileInputStream
 
@@ -17,9 +17,15 @@ class Indexer {
 
   val termSize = 3
 
-  def index(str :String) : List[String] = {
+  /**
+    * Returns a list of terms that occur in the doc
+    *
+    * @param doc
+    * @return
+    */
+  def index(doc :String) : List[String] = {
 
-    val iteratee = tokenizer.tokenize(str)
+    val iteratee = tokenizer.tokenize(doc)
       .view.zipWithIndex
       .filter(stopWords.isNotStopWord)
       .filter(_filterOutNonAlphanumeric)
@@ -91,9 +97,9 @@ class Tokenizer {
   lazy val model = new TokenizerModel(is)
   lazy val tokenizer = new TokenizerME(model)
 
-  def tokenize(str : String) : List[String] = {
+  def tokenize(doc : String) : List[String] = {
 
-    return tokenizer.tokenize(str).map(_ toLowerCase).toList
+    return tokenizer.tokenize(doc).map(_ toLowerCase).toList
   }
 }
 
@@ -110,14 +116,14 @@ class Stemmer {
 
   lazy val stemmer = new PorterStemmer()
 
-  def stem(str : (String, Int)) : (String, Int) = (stemmer.stem(str._1), str._2)
+  def stem(token : (String, Int)) : (String, Int) = (stemmer.stem(token._1), token._2)
 }
 
-object HelloWorld extends App {
+/*object HelloWorld extends App {
 
   val i = new Indexer
 
   //println(i.index("Some languages (like Haskell) are lazy: every expression’s evaluation waits for its (first) use.").toString)
   println(i.index("one two, three four").reverse.toString)
   println(i.index("one two, three four").length)
-}
+}*/
