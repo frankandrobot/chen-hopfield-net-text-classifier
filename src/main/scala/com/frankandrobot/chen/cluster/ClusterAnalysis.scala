@@ -1,4 +1,4 @@
-package com.frankandrobot.chen.clusteranalysis
+package com.frankandrobot.chen.cluster
 
 import com.frankandrobot.chen.DocTypes.{DocWithRawTerms, RawTerm}
 import com.frankandrobot.chen.docs.RawTermsByDocStore

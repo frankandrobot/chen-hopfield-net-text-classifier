@@ -1,4 +1,4 @@
-package com.frankandrobot.chen.clusteranalysis
+package com.frankandrobot.chen.cluster
 
 import breeze.linalg.DenseMatrix
 import com.frankandrobot.chen.DocTypes.DocWithRawTerms
@@ -6,7 +6,10 @@ import com.frankandrobot.chen.docs.{RawTermsByDocStore, TermStore}
 
 import scala.math.log10
 
-class ClusterWeights(termStore: TermStore, clusterAnalysis: ClusterAnalysis, rawTermsByDocStore: RawTermsByDocStore) {
+class ClusterWeights(termStore: TermStore,
+                     clusterAnalysis: ClusterAnalysis,
+                     rawTermsByDocStore: RawTermsByDocStore,
+                     threshold : Double) {
 
   def weight(termIndex : Int, docWithRawTerms : DocWithRawTerms) = {
 
@@ -28,6 +31,9 @@ class ClusterWeights(termStore: TermStore, clusterAnalysis: ClusterAnalysis, raw
     val num = rawTermsByDocStore.docs.foldLeft(0.0)(_ + weight(i, j, _))
     val denom = rawTermsByDocStore.docs.foldLeft(0.0)(_ + weight(i, _))
 
-    num / denom
+    val w = num / denom
+
+    if (w > threshold) { w }
+    else { 0.0 }
   }
 }

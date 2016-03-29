@@ -33,5 +33,5 @@ package object DocTypes {
   case class DocWithRawTerms(val doc : DocLite,
                              val terms: List[RawTerm])
 
-  case class Term(override val value : String, val docs : Set[DocLite]) extends RawTerm(value)
+  case class Term(val index : Int, override val value : String, val docs : Set[DocLite]) extends RawTerm(value)
 }

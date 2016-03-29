@@ -1,7 +1,7 @@
 package com.frankandrobot.chen.docs
 
 import com.frankandrobot.chen.DocTypes.{DocLite, DocWithRawTerms, Term}
-import com.frankandrobot.chen.clusteranalysis.ClusterAnalysis
+import com.frankandrobot.chen.cluster.ClusterAnalysis
 
 import scala.collection.mutable.{ArrayBuffer, HashMap}
 
@@ -11,6 +11,7 @@ class TermStore(clusterAnalysis: ClusterAnalysis) {
   private var _termMap = HashMap.empty[String, Term]
 
   def terms() = _termList
+  def termMap() = _termMap
 
   def add(rawTermsByDoc : Seq[DocWithRawTerms]) = {
 
@@ -19,9 +20,9 @@ class TermStore(clusterAnalysis: ClusterAnalysis) {
       docRawTerms.terms.foreach(term => {
 
         _termMap.get(term.value) match {
-          case Some(x) => _termMap += (term.value -> Term(x.value, x.docs + docRawTerms.doc))
+          case Some(x) => _termMap += (term.value -> Term(x.index, x.value, x.docs + docRawTerms.doc))
           case _ => {
-            val newTerm = Term(term.value, Set[DocLite](docRawTerms.doc))
+            val newTerm = Term(_termList.length, term.value, Set[DocLite](docRawTerms.doc))
             _termMap += (term.value -> newTerm)
             _termList += newTerm
           }
