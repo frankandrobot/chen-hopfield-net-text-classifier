@@ -1,7 +1,7 @@
 package com.frankandrobot.chen.clusteranalysis
 
-import com.frankandrobot.chen.docs.{Doc, DocStore}
-import com.frankandrobot.chen.terms.RawTerm
+import com.frankandrobot.chen.DocTypes.{DocWithRawTerms, RawTerm}
+import com.frankandrobot.chen.docs.RawTermsByDocStore
 import com.frankandrobot.chen.utils.Memoize._
 
 import scala.annotation.tailrec
@@ -9,30 +9,46 @@ import scala.annotation.tailrec
 // TODO use lazy views
 // TODO replace nested cases with monads
 
-class ClusterAnalysis(DocStore : DocStore) {
+class ClusterAnalysis(docStore : RawTermsByDocStore) {
 
-  def termFrequency(rawTerm : RawTerm, doc : Doc) : Int = {
+  def termFrequency(rawTerm : RawTerm, docWithRawTerms: DocWithRawTerms) : Int = {
 
-    val histogram = _histogramFn(doc)
+    val histogram = _histogramFn(docWithRawTerms)
 
-    histogram(rawTerm.value)
+    histogram.getOrElse(rawTerm.value, 0)
+  }
+
+  def termFrequency(rawTerm1 : RawTerm, rawTerm2 : RawTerm, docWithRawTerms: DocWithRawTerms) = {
+
+    termFrequency(rawTerm1, docWithRawTerms) + termFrequency(rawTerm2, docWithRawTerms)
   }
 
   /**
     * For each doc,
-    *    docFreq += termFreq(rawTerm, doc)
+    *    docFreq += termFreq(rawTerm, doc) ? 1 : 0
     *
     * @param rawTerm
     * @return
     */
   def docFrequency(rawTerm : RawTerm) : Int = {
 
-    DocStore.docs.foldLeft(0) { (total, cur) => total + termFrequency(rawTerm, cur) }
+    docStore.docs.foldLeft(0) { (total, cur) => total + (if (termFrequency(rawTerm, cur) > 0) {1} else {0}) }
   }
 
-  private def _histogram(doc : Doc) = {
+  def docFrequency(rawTerm1 : RawTerm, rawTerm2 : RawTerm) = {
 
-    val docTerms = doc.terms
+    docStore.docs.foldLeft(0) { (total, cur) => {
+
+      val term1Occurs = termFrequency(rawTerm2, cur) > 0
+      lazy val term2Occurs = termFrequency(rawTerm2, cur) > 0
+
+      total + (if (term1Occurs && term2Occurs) {1} else {0})
+    }}
+  }
+
+  private def _histogram(docWithRawTerms: DocWithRawTerms) = {
+
+    val docTerms = docWithRawTerms.terms
 
     docTerms.foldLeft(Map[String, Int]()) { (total, cur) => total + (cur.value -> (1 + total.getOrElse(cur.value, 0))) }
   }
@@ -40,8 +56,10 @@ class ClusterAnalysis(DocStore : DocStore) {
   private val _histogramFn = memoize(_histogram _)
 
   @tailrec
-  final def analyze(target : Float = 0.90f, threshold : Int = 1, prevDocs : List[Doc] = DocStore.docs, prevDiff : Float = 0)
-  : List[Doc] = {
+  final def analyze(target : Float = 0.90f,
+                    threshold : Int = 1,
+                    prevDocs : List[DocWithRawTerms] = docStore.docs,
+                    prevDiff : Float = 0) : List[DocWithRawTerms] = {
 
     val curDocs = prevDocs.filter( doc => {
 

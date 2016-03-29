@@ -23,7 +23,7 @@ class Indexer {
     * @param doc
     * @return
     */
-  def index(doc :String) : List[String] = {
+  def index(doc : String) : List[String] = {
 
     val iteratee = tokenizer.tokenize(doc)
       .view.zipWithIndex

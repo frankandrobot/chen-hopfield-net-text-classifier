@@ -1,12 +1,21 @@
 package com.frankandrobot.chen.docs
 
+import com.frankandrobot.chen.DocTypes.{Doc, DocId, DocWithRawTerms, RawTerm}
+import com.frankandrobot.chen.indexer.Indexer
 
-class DocStore {
 
-  var docs = List[Doc]()
+class DocStore(indexer : Indexer) {
 
-  def add(doc : Doc) : Unit = {
+  private var _docs = List[Doc]()
 
-    docs = doc :: docs
+  def docs() = _docs
+
+  def add(title : String, doc : String) = {
+
+    _docs = Doc(DocId(_docs.length.toString), title, doc) :: _docs
   }
+
+  def extractDocRawTerms() = _docs.map(index)
+
+  def index(doc : Doc) = DocWithRawTerms(doc.toDocLite, indexer.index(doc.contents).map(RawTerm(_)))
 }
