@@ -11,16 +11,16 @@ import scala.annotation.tailrec
 
 class ClusterAnalysis(docStore : RawTermsByDocStore) {
 
-  def termFrequency(rawTerm : RawTerm, docWithRawTerms: DocWithRawTerms) : Int = {
+  def termFrequency(docWithRawTerms: DocWithRawTerms, rawTerm : RawTerm) : Int = {
 
     val histogram = _histogramFn(docWithRawTerms)
 
     histogram.getOrElse(rawTerm.value, 0)
   }
 
-  def termFrequency(rawTerm1 : RawTerm, rawTerm2 : RawTerm, docWithRawTerms: DocWithRawTerms) = {
+  def termFrequency(docWithRawTerms: DocWithRawTerms, rawTerm1 : RawTerm, rawTerm2 : RawTerm) = {
 
-    termFrequency(rawTerm1, docWithRawTerms) + termFrequency(rawTerm2, docWithRawTerms)
+    termFrequency(docWithRawTerms, rawTerm1) + termFrequency(docWithRawTerms, rawTerm2)
   }
 
   /**
@@ -32,15 +32,15 @@ class ClusterAnalysis(docStore : RawTermsByDocStore) {
     */
   def docFrequency(rawTerm : RawTerm) : Int = {
 
-    docStore.docs.foldLeft(0) { (total, cur) => total + (if (termFrequency(rawTerm, cur) > 0) {1} else {0}) }
+    docStore.docs.foldLeft(0) { (total, cur) => total + (if (termFrequency(cur, rawTerm) > 0) {1} else {0}) }
   }
 
   def docFrequency(rawTerm1 : RawTerm, rawTerm2 : RawTerm) = {
 
     docStore.docs.foldLeft(0) { (total, cur) => {
 
-      val term1Occurs = termFrequency(rawTerm2, cur) > 0
-      lazy val term2Occurs = termFrequency(rawTerm2, cur) > 0
+      val term1Occurs = termFrequency(cur, rawTerm1) > 0
+      lazy val term2Occurs = termFrequency(cur, rawTerm2) > 0
 
       total + (if (term1Occurs && term2Occurs) {1} else {0})
     }}
@@ -63,7 +63,7 @@ class ClusterAnalysis(docStore : RawTermsByDocStore) {
 
     val curDocs = prevDocs.filter( doc => {
 
-      val terms = doc.terms.filter(termFrequency(_, doc) >= threshold)
+      val terms = doc.terms.filter(termFrequency(doc, _) >= threshold)
       terms.head != Nil
     })
 
