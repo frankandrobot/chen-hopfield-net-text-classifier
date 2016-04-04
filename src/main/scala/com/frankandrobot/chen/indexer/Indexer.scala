@@ -25,13 +25,25 @@ class Indexer {
     */
   def index(doc : String) : List[String] = {
 
-    val iteratee = tokenizer.tokenize(doc)
+    val iteratee = tokenizer.tokenize(_filterOutUrls(_filterOutHashTag(doc)))
       .view.zipWithIndex
       .filter(stopWords.isNotStopWord)
       .filter(_filterOutNonAlphanumeric)
       .map(stemmer.stem)
 
     return _consecutiveTerms(iteratee)
+  }
+
+  private def _filterOutUrls(doc : String) = {
+
+    val URL = "(http|https|ftp)://\\S+".r
+
+    URL replaceAllIn(doc, "")
+  }
+
+  private def _filterOutHashTag(doc : String) = {
+
+    "#".r replaceAllIn(doc, "")
   }
 
   private def _filterOutNonAlphanumeric(word : (String, Int)) : Boolean = {

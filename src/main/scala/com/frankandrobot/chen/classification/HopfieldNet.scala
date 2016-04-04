@@ -23,7 +23,7 @@ class HopfieldNet(termStore: TermStore, clusterWeights: ClusterWeights, indexer:
           case None => Nil
           case Some(term) => {
 
-            val _mu = mu(theta_j, theta_o, term.index)
+            val _mu : (Int, Int) => Double = mu(theta_j, theta_o, term.index)
 
             val error = (t : Int) => (0 to n - 1).foldLeft(0.0){ (total, j) =>
 
@@ -55,8 +55,8 @@ class HopfieldNet(termStore: TermStore, clusterWeights: ClusterWeights, indexer:
       case 0 => if (j == inputIndex) {1.0} else {0.0}
       case t if t > 0 => {
 
-        val _mu = mu(theta_j, theta_o, inputIndex)
-        val _fs = fs(theta_j, theta_o)
+        val _mu : (Int, Int) => Double = mu(theta_j, theta_o, inputIndex)
+        val _fs : Double => Double = fs(theta_j, theta_o)
 
         val sum = (0 to n - 1).foldLeft(0.0)((total, i) => total + clusterWeights.weights(i, j) * _mu(i, t - 1))
 

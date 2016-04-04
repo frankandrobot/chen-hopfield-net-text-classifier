@@ -15,3 +15,5 @@ libraryDependencies  ++= Seq(
   // be compatible with the Apache License. No GPL code, as best I know.
   "org.scalanlp" %% "breeze-natives" % "0.12"
 )
+
+libraryDependencies += "org.json4s" %% "json4s-jackson" % "3.2.11"

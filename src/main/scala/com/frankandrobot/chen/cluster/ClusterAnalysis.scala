@@ -18,7 +18,7 @@ class ClusterAnalysis(docStore : RawTermsByDocStore) {
     histogram.getOrElse(rawTerm.value, 0)
   }
 
-  def termFrequency(docWithRawTerms: DocWithRawTerms, rawTerm1 : RawTerm, rawTerm2 : RawTerm) = {
+  def termFrequency(docWithRawTerms: DocWithRawTerms, rawTerm1 : RawTerm, rawTerm2 : RawTerm) : Int = {
 
     termFrequency(docWithRawTerms, rawTerm1) + termFrequency(docWithRawTerms, rawTerm2)
   }

@@ -10,12 +10,12 @@ class DocStore(indexer : Indexer) {
 
   def docs() = _docs
 
-  def add(title : String, doc : String) = {
+  def add(id : String, title : String, doc : String) = {
 
-    _docs = Doc(DocId(_docs.length.toString), title, doc) :: _docs
+    _docs = Doc(DocId(id), title, doc) :: _docs
   }
 
   def extractDocRawTerms() = _docs.map(index)
 
-  def index(doc : Doc) = DocWithRawTerms(doc.toDocLite, indexer.index(doc.contents).map(RawTerm(_)))
+  def index(doc : Doc) = DocWithRawTerms(doc.toDocLite, indexer.index(doc.title + ". " +doc.contents).map(RawTerm(_)))
 }
