@@ -32,7 +32,7 @@ class TermStore(clusterAnalysis: ClusterAnalysis) {
   }
 
   def sort() = {
-    _termList = _termList.sortWith(clusterAnalysis.docFrequency(_) < clusterAnalysis.docFrequency(_))
+    _termList = _termList.sortWith(clusterAnalysis.docFrequency(_) > clusterAnalysis.docFrequency(_))
     _termList
   }
 }

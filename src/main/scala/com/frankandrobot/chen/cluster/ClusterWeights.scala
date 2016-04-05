@@ -9,7 +9,7 @@ import scala.math.log10
 class ClusterWeights(termStore: TermStore,
                      clusterAnalysis: ClusterAnalysis,
                      rawTermsByDocStore: RawTermsByDocStore,
-                     threshold : Double) {
+                     threshold : Double = 0.1) {
 
   def weight(docWithRawTerms : DocWithRawTerms, termIndex : Int) = {
 
@@ -32,6 +32,8 @@ class ClusterWeights(termStore: TermStore,
     val denom = rawTermsByDocStore.docs.foldLeft(0.0)(_ + weight(_, j))
 
     val w = num / denom
+
+    // println(j, k, w)
 
     if (w > threshold) { w }
     else { 0.0 }

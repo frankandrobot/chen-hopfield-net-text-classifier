@@ -9,7 +9,7 @@ import scala.annotation.tailrec
 // TODO use lazy views
 // TODO replace nested cases with monads
 
-class ClusterAnalysis(docStore : RawTermsByDocStore) {
+class ClusterAnalysis(rawTermsByDocStore : RawTermsByDocStore) {
 
   def termFrequency(docWithRawTerms: DocWithRawTerms, rawTerm : RawTerm) : Int = {
 
@@ -32,18 +32,12 @@ class ClusterAnalysis(docStore : RawTermsByDocStore) {
     */
   def docFrequency(rawTerm : RawTerm) : Int = {
 
-    docStore.docs.foldLeft(0) { (total, cur) => total + (if (termFrequency(cur, rawTerm) > 0) {1} else {0}) }
+    _docFrequencyFn(rawTerm)
   }
 
   def docFrequency(rawTerm1 : RawTerm, rawTerm2 : RawTerm) = {
 
-    docStore.docs.foldLeft(0) { (total, cur) => {
-
-      val term1Occurs = termFrequency(cur, rawTerm1) > 0
-      lazy val term2Occurs = termFrequency(cur, rawTerm2) > 0
-
-      total + (if (term1Occurs && term2Occurs) {1} else {0})
-    }}
+    _docFrequency2Fn(rawTerm1, rawTerm2)
   }
 
   private def _histogram(docWithRawTerms: DocWithRawTerms) = {
@@ -53,18 +47,36 @@ class ClusterAnalysis(docStore : RawTermsByDocStore) {
     docTerms.foldLeft(Map[String, Int]()) { (total, cur) => total + (cur.value -> (1 + total.getOrElse(cur.value, 0))) }
   }
 
+  private def _docFrequency(rawTerm : RawTerm) : Int = {
+
+    rawTermsByDocStore.docs.foldLeft(0) { (total, cur) => total + (if (termFrequency(cur, rawTerm) > 0) {1} else {0}) }
+  }
+
+  private def _docFrequency2(rawTerm1 : RawTerm, rawTerm2 : RawTerm) = {
+
+    rawTermsByDocStore.docs.foldLeft(0) { (total, cur) => {
+
+      val term1Occurs = termFrequency(cur, rawTerm1) > 0
+      lazy val term2Occurs = termFrequency(cur, rawTerm2) > 0
+
+      total + (if (term1Occurs && term2Occurs) {1} else {0})
+    }}
+  }
+
   private val _histogramFn = memoize(_histogram _)
+  private val _docFrequencyFn = memoize(_docFrequency _)
+  private val _docFrequency2Fn = memoize(_docFrequency2 _)
 
   @tailrec
   final def analyze(target : Float = 0.90f,
                     threshold : Int = 1,
-                    prevDocs : List[DocWithRawTerms] = docStore.docs,
+                    prevDocs : List[DocWithRawTerms] = rawTermsByDocStore.docs,
                     prevDiff : Float = 0) : List[DocWithRawTerms] = {
 
     val curDocs = prevDocs.filter( doc => {
 
       val terms = doc.terms.filter(termFrequency(doc, _) >= threshold)
-      terms.head != Nil
+      terms.length > 0
     })
 
     val ratio = curDocs.length.toFloat / prevDocs.length.toFloat

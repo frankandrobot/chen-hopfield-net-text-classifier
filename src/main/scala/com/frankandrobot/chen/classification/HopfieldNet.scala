@@ -11,7 +11,7 @@ class HopfieldNet(termStore: TermStore, clusterWeights: ClusterWeights, indexer:
 
   private def n() = termStore.terms.length
 
-  def relatedConcepts(theta_j : Double, theta_o : Double, epsilon : Double)(word : String) = {
+  def relatedConcepts(word : String, theta_j : Double = 0.1, theta_o : Double = 0.01, epsilon : Double = 1.0) = {
 
     indexer.index(word) match {
 
@@ -32,7 +32,7 @@ class HopfieldNet(termStore: TermStore, clusterWeights: ClusterWeights, indexer:
             }
 
             var t = 0
-            while(error(t) > epsilon) { t += 1 }
+            while(error(t) > epsilon) { t += 1; println(error(t)) }
 
             (0 to n - 1).foldLeft(List[Term]()){ (total, i) => {
 
