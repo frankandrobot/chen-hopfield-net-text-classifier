@@ -40,11 +40,21 @@ class ClusterAnalysis(rawTermsByDocStore : RawTermsByDocStore) {
     _docFrequency2Fn(rawTerm1, rawTerm2)
   }
 
-  private def _histogram(docWithRawTerms: DocWithRawTerms) = {
+  /*private def _histogram(docWithRawTerms: DocWithRawTerms) = {
 
     val docTerms = docWithRawTerms.terms
 
     docTerms.foldLeft(Map[String, Int]()) { (total, cur) => total + (cur.value -> (1 + total.getOrElse(cur.value, 0))) }
+  }*/
+
+  private def _histogram(docWithRawTerms: DocWithRawTerms): collection.Map[String, Int] = {
+
+    val hash = collection.mutable.HashMap.empty[String, Int] withDefaultValue 0
+    docWithRawTerms.terms foreach { cur => hash(cur.value) += 1 }
+
+    println("Calculated histogram for " + docWithRawTerms.doc)
+
+    hash
   }
 
   private def _docFrequency(rawTerm : RawTerm) : Int = {
@@ -67,27 +77,39 @@ class ClusterAnalysis(rawTermsByDocStore : RawTermsByDocStore) {
   private val _docFrequencyFn = memoize(_docFrequency _)
   private val _docFrequency2Fn = memoize(_docFrequency2 _)
 
+  /**
+    * Discard documents where all the terms have a docFrequency < docFrequencyThreshold
+    * Adjust docFrequencyThreshold so that the doc indexing percent (ratio of docs lefts to original docs)
+    * is close to the docIndexingTarget
+    *
+    * @param docIndexingTarget
+    * @param docFrequencyThreshold
+    * @param prevDocs
+    * @param prevDiff
+    * @return
+    */
   @tailrec
-  final def analyze(target : Float = 0.90f,
-                    threshold : Int = 1,
-                    prevDocs : List[DocWithRawTerms] = rawTermsByDocStore.docs,
-                    prevDiff : Float = 0) : List[DocWithRawTerms] = {
+  final def infoLossAnalysis(docIndexingTarget : Double = 0.9,
+                             docFrequencyThreshold : Int = 1,
+                             prevDocs : List[DocWithRawTerms] = rawTermsByDocStore.docs,
+                             prevDiff : Double = 0) : List[DocWithRawTerms] = {
 
     val curDocs = prevDocs.filter( doc => {
 
-      val terms = doc.terms.filter(termFrequency(doc, _) >= threshold)
+      val terms = doc.terms.filter(docFrequency(_) >= docFrequencyThreshold)
       terms.length > 0
     })
 
-    val ratio = curDocs.length.toFloat / prevDocs.length.toFloat
+    val ratio = curDocs.length.toDouble / rawTermsByDocStore.docs.length.toDouble
 
-    val diff = ratio - target
+    // This is decreasing, since you always remove more terms in each step
+    val diff = ratio - docIndexingTarget
 
     if (diff <= 0) {
       if (prevDiff < diff) { return prevDocs }
       else { return curDocs }
     }
 
-    return analyze(target, threshold + 1, curDocs, diff)
+    return infoLossAnalysis(docIndexingTarget, docFrequencyThreshold + 1, curDocs, diff)
   }
 }
