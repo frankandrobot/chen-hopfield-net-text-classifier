@@ -20,6 +20,26 @@ class ConnectionWeights(termStore: TermStore,
   lazy val weights = DenseMatrix.zeros[Double](termStore.terms.length, termStore.terms.length)
 
   /**
+    * This is the main function
+    *
+    * @param j
+    * @param k
+    * @return
+    */
+  private def _weight(j : Int, k : Int) : Double = {
+
+    val num = _shortcircuitSum(rawTermsByDocStore.docs, (doc : DocWithRawTerms) => clusterWeights.weight(doc, j, k))
+    val denom = _shortcircuitSum(rawTermsByDocStore.docs, (doc : DocWithRawTerms) => clusterWeights.weight(doc, j))
+
+    val w = num / denom
+
+    //println(j, k, w)
+
+    if (w <= threshold || w.isNaN) { 0.0 }
+    else { w }
+  }
+
+  /**
     * Iterate thru each doc and call the given function. Sum the results and return 0.0 if ever NaN is encountered
     *
     * @param docs
@@ -42,19 +62,6 @@ class ConnectionWeights(termStore: TermStore,
     sum
   }
 
-  private def _weight(j : Int, k : Int) : Double = {
-
-    val num = _shortcircuitSum(rawTermsByDocStore.docs, (doc : DocWithRawTerms) => clusterWeights.weight(doc, j, k))
-    val denom = _shortcircuitSum(rawTermsByDocStore.docs, (doc : DocWithRawTerms) => clusterWeights.weight(doc, j))
-
-    val w = num / denom
-
-    //println(j, k, w)
-
-    if (w <= threshold || w.isNaN) { 0.0 }
-    else { w }
-  }
-
   private def _blockWeight(x : Strip, y : Strip) = Future {
 
     val X = x._1 to x._2 - 1
@@ -63,6 +70,11 @@ class ConnectionWeights(termStore: TermStore,
     X foreach { j => Y foreach { k => weights(j, k) = _weight(j, k)}}
   }
 
+  /**
+    * Divide the matrix into blocks. Assign a CPU core to each block.
+    *
+    * @return
+    */
   def calculateWeights() = {
 
     // force load of weight matrix
