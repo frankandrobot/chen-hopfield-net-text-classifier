@@ -4,11 +4,11 @@ import breeze.linalg.DenseMatrix
 import com.frankandrobot.chen.DocTypes.Doc
 import com.frankandrobot.chen.cluster.ClusterWeights
 import com.frankandrobot.chen.docs.{DocStore, TermStore}
+import com.frankandrobot.chen.utils.Memoize._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
-import scala.util.control.Breaks._
 
 
 class ConnectionWeights(termStore: TermStore,
@@ -45,8 +45,8 @@ class ConnectionWeights(termStore: TermStore,
     */
   private def _weight(j : Int, k : Int) : Double = {
 
-    val num = _shortcircuitSum(rawTermsByDocStore.docs, (doc : Doc) => clusterWeights.weight(doc, j, k))
-    val denom = _shortcircuitSum(rawTermsByDocStore.docs, (doc : Doc) => clusterWeights.weight(doc, j))
+   val num = _shortcircuitSum(rawTermsByDocStore.docs, (doc : Doc) => clusterWeights.weight(doc, j, k))
+   val denom = _shortcircuitSum(rawTermsByDocStore.docs, (doc : Doc) => clusterWeights.weight(doc, j))
 
     val w = num / denom
 
@@ -55,6 +55,8 @@ class ConnectionWeights(termStore: TermStore,
     if (w <= threshold || w.isNaN) { 0.0 }
     else { w }
   }
+
+  private def _shortcircuitSumFn = memoize(_shortcircuitSum _)
 
   /**
     * Iterate thru each doc and call the given function. Sum the results and return 0.0 if ever NaN is encountered
@@ -68,13 +70,10 @@ class ConnectionWeights(termStore: TermStore,
     var sum = 0.0
     var quant = 0.0
 
-    breakable { for (i <- docs) {
+    for (i <- docs) {
 
-      quant = fn(i)
-
-      if (quant.isNaN) break
-      else sum += quant
-    } }
+      sum += fn(i)
+    }
 
     sum
   }
@@ -91,9 +90,9 @@ class ConnectionWeights(termStore: TermStore,
     X foreach { j => {
 
       if (j == quarter) println("Quarter way there on", x, y);
-      if (j == quarter * quarter) println("Halfway way there on", x, y);
+      if (j == quarter + quarter) println("Halfway way there on", x, y);
 
-      println(j, x, y)
+     // print(j, x, y)
 
       Y foreach { k => {
 
