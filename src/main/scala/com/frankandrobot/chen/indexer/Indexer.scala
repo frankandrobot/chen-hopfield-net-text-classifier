@@ -25,36 +25,79 @@ class Indexer {
     */
   def index(doc : String) : List[String] = {
 
-    val iteratee = tokenizer.tokenize(_filterOutUrls(_filterOutHashTag(doc)))
+    val iteratee = List(doc)
+      .map(_removeUrls)
+      .map(_removeHashtagSymbol)
+      .map(tokenizer.tokenize)
+      .head
       .view.zipWithIndex
       .filter(stopWords.isNotStopWord)
-      .filter(_filterOutNonAlphanumeric)
+      .filter(_filterNonAlphanumeric)
+      .filter(_filterDigits)
+      .filter(_filterShortTokens)
       .map(stemmer.stem)
 
     return _consecutiveTerms(iteratee)
   }
 
-  private def _filterOutUrls(doc : String) = {
+  /**
+    * Remove urls from document
+    *
+    * @param doc
+    * @return
+    */
+  private def _removeUrls(doc : String) = {
 
     val URL = "(http|https|ftp)://\\S+".r
 
     URL replaceAllIn(doc, "")
   }
 
-  private def _filterOutHashTag(doc : String) = {
+  /**
+    * Remove hashtag symbol from document (but leave word)
+    *
+    * @param doc
+    * @return
+    */
+  private def _removeHashtagSymbol(doc : String) = {
 
     "#".r replaceAllIn(doc, "")
   }
 
-  private def _filterOutNonAlphanumeric(word : (String, Int)) : Boolean = {
+  /**
+    * Don't really remember what the use case is...
+    * If has a nonalpha-numeric character, filter out token.
+    *
+    * @param token
+    * @return
+    */
+  private def _filterNonAlphanumeric(token : TokenType) : Boolean = {
 
     val nonalphanumeric = new Regex("[^a-zA-Z0-9]")
 
-    return nonalphanumeric.findFirstIn(word._1) match {
+    nonalphanumeric.findFirstIn(token._1) match {
       case Some(x) => false
       case None => true
     }
   }
+
+  /**
+    * Filter out tokens that are digits
+    * @param token
+    * @return
+    */
+  private def _filterDigits(token : TokenType) : Boolean = {
+
+    val number = new Regex("^[0-9]+$")
+
+    number findFirstIn token._1 match {
+      case Some(x) => false
+      case _ => true
+    }
+  }
+
+  private def _filterShortTokens(token : TokenType) = token._1.length >= 2
+
 
   type TokenType = (String, Int)
 
