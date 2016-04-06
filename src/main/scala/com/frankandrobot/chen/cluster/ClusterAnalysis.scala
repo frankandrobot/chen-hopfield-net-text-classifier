@@ -2,7 +2,7 @@ package com.frankandrobot.chen.cluster
 
 import com.frankandrobot.chen.DocTypes.{Doc, RawTerm}
 import com.frankandrobot.chen.docs.DocStore
-import com.frankandrobot.chen.utils.Sum.Sum
+import com.frankandrobot.chen.utils.MyMath
 
 import scala.annotation.tailrec
 
@@ -16,9 +16,9 @@ class ClusterAnalysis(docStore : DocStore) {
     doc.histogram.getOrElse(rawTerm.value, 0)
   }
 
-  def termFrequency(docWithRawTerms: Doc, rawTerm1 : RawTerm, rawTerm2 : RawTerm) : Int = {
+  def termFrequency(doc: Doc, rawTerm1 : RawTerm, rawTerm2 : RawTerm) : Int = {
 
-    termFrequency(docWithRawTerms, rawTerm1) + termFrequency(docWithRawTerms, rawTerm2)
+    termFrequency(doc, rawTerm1) + termFrequency(doc, rawTerm2)
   }
 
   /**
@@ -30,17 +30,14 @@ class ClusterAnalysis(docStore : DocStore) {
     */
   def docFrequency(rawTerm : RawTerm) : Int = {
 
-    Sum.sum(docStore.docs, (doc : Doc) => { if (termFrequency(doc, rawTerm) > 0) {1} else {0}} )
+    MyMath.sum(docStore.docs, (doc : Doc) => { if (termFrequency(doc, rawTerm) > 0) {1} else {0}} )
   }
 
   def docFrequency(rawTerm1 : RawTerm, rawTerm2 : RawTerm) = {
 
-    Sum.sum(docStore.docs, (doc : Doc) => {
+    MyMath.sum(docStore.docs, (doc : Doc) => {
 
-      val termOneOccurs = termFrequency(doc, rawTerm1) > 0
-      lazy val termTwoOccurs = termFrequency(doc, rawTerm2) > 0
-
-      if (termOneOccurs && termTwoOccurs) {1} else {0}
+      if (termFrequency(doc, rawTerm1) > 0 && termFrequency(doc, rawTerm2) > 0) {1} else {0}
     })
   }
 
