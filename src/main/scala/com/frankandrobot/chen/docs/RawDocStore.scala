@@ -65,6 +65,8 @@ object Helper {
 
       val range = strip._1 to strip._2 - 1
 
+      println("Starting", strip)
+
       Future(range.map(i => {action(list(i))}))
     })
 
