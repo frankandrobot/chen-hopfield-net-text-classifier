@@ -44,14 +44,21 @@ class ClusterWeights(termStore: TermStore,
 
 object ClusterWeights {
 
-  private def _shortcircuitSum(docs : Seq[DocWithRawTerms], it : DocWithRawTerms => Double) : Double = {
+  /**
+    * Iterate thru each doc and call the given function. Sum the results and return 0.0 if ever NaN is encountered
+    *
+    * @param docs
+    * @param fn
+    * @return
+    */
+  private def _shortcircuitSum(docs : Seq[DocWithRawTerms], fn : DocWithRawTerms => Double) : Double = {
 
     var sum = 0.0
     var quant = 0.0
 
     breakable { for (i <- docs) {
 
-      quant = it(i)
+      quant = fn(i)
 
       if (quant.isNaN) break
       else sum += quant
