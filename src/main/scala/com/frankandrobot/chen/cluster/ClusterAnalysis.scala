@@ -2,7 +2,7 @@ package com.frankandrobot.chen.cluster
 
 import com.frankandrobot.chen.DocTypes.{Doc, RawTerm}
 import com.frankandrobot.chen.docs.DocStore
-import com.frankandrobot.chen.utils.Memoize._
+import com.frankandrobot.chen.utils.Sum.Sum
 
 import scala.annotation.tailrec
 
@@ -30,32 +30,19 @@ class ClusterAnalysis(docStore : DocStore) {
     */
   def docFrequency(rawTerm : RawTerm) : Int = {
 
-    _docFrequencyFn(rawTerm)
+    Sum.sum(docStore.docs, (doc : Doc) => { if (termFrequency(doc, rawTerm) > 0) {1} else {0}} )
   }
 
   def docFrequency(rawTerm1 : RawTerm, rawTerm2 : RawTerm) = {
 
-    _docFrequency2Fn(rawTerm1, rawTerm2)
+    Sum.sum(docStore.docs, (doc : Doc) => {
+
+      val termOneOccurs = termFrequency(doc, rawTerm1) > 0
+      lazy val termTwoOccurs = termFrequency(doc, rawTerm2) > 0
+
+      if (termOneOccurs && termTwoOccurs) {1} else {0}
+    })
   }
-
-  private def _docFrequency(rawTerm : RawTerm) : Int = {
-
-    docStore.docs.foldLeft(0) { (total, cur) => total + (if (termFrequency(cur, rawTerm) > 0) {1} else {0}) }
-  }
-
-  private def _docFrequency2(rawTerm1 : RawTerm, rawTerm2 : RawTerm) = {
-
-    docStore.docs.foldLeft(0) { (total, cur) => {
-
-      val termOneOccurs = termFrequency(cur, rawTerm1) > 0
-      lazy val termTwoOccurs = termFrequency(cur, rawTerm2) > 0
-
-      total + (if (termOneOccurs && termTwoOccurs) {1} else {0})
-    }}
-  }
-
-  private val _docFrequencyFn = memoize(_docFrequency _)
-  private val _docFrequency2Fn = memoize(_docFrequency2 _)
 
   /**
     * Discard documents where all the terms have a docFrequency < docFrequencyThreshold
