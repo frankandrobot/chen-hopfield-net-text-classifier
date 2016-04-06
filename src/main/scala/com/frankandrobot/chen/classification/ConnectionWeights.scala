@@ -1,7 +1,7 @@
 package com.frankandrobot.chen.classification
 
 import breeze.linalg.DenseMatrix
-import com.frankandrobot.chen.DocTypes.DocWithRawTerms
+import com.frankandrobot.chen.DocTypes.Doc
 import com.frankandrobot.chen.cluster.ClusterWeights
 import com.frankandrobot.chen.docs.{RawTermsByDocStore, TermStore}
 
@@ -45,8 +45,8 @@ class ConnectionWeights(termStore: TermStore,
     */
   private def _weight(j : Int, k : Int) : Double = {
 
-    val num = _shortcircuitSum(rawTermsByDocStore.docs, (doc : DocWithRawTerms) => clusterWeights.weight(doc, j, k))
-    val denom = _shortcircuitSum(rawTermsByDocStore.docs, (doc : DocWithRawTerms) => clusterWeights.weight(doc, j))
+    val num = _shortcircuitSum(rawTermsByDocStore.docs, (doc : Doc) => clusterWeights.weight(doc, j, k))
+    val denom = _shortcircuitSum(rawTermsByDocStore.docs, (doc : Doc) => clusterWeights.weight(doc, j))
 
     val w = num / denom
 
@@ -63,7 +63,7 @@ class ConnectionWeights(termStore: TermStore,
     * @param fn
     * @return
     */
-  private def _shortcircuitSum(docs : Seq[DocWithRawTerms], fn : DocWithRawTerms => Double) : Double = {
+  private def _shortcircuitSum(docs : Seq[Doc], fn : Doc => Double) : Double = {
 
     var sum = 0.0
     var quant = 0.0
@@ -81,10 +81,28 @@ class ConnectionWeights(termStore: TermStore,
 
   private def _blockWeight(x : Strip, y : Strip) = Future {
 
+    println("Starting ", x, y)
+
     val X = x._1 to x._2 - 1
     val Y = y._1 to y._2 - 1
 
-    X foreach { j => Y foreach { k => _weightMatrix(j, k) = _weight(j, k)}}
+    val quarter = (x._2 - x._1) / 4
+
+    X foreach { j => {
+
+      if (j == quarter) println("Quarter way there on", x, y);
+      if (j == quarter * quarter) println("Halfway way there on", x, y);
+
+      println(j, x, y)
+
+      Y foreach { k => {
+
+        _weightMatrix(j, k) = _weight(j, k)
+
+      }}
+    }}
+
+    println("Finished ", x, y)
   }
 
   /**
@@ -94,7 +112,7 @@ class ConnectionWeights(termStore: TermStore,
     */
   private def _calculateWeights() = {
 
-    val cores = Runtime.getRuntime().availableProcessors()
+    val cores = Math.min(Runtime.getRuntime().availableProcessors(), 4)
     val max = if (n % cores == 0) { cores - 1} else { cores }
     val stripWidth = n / cores
 

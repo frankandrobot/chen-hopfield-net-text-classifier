@@ -1,6 +1,6 @@
 package com.frankandrobot.chen.docs
 
-import com.frankandrobot.chen.DocTypes.{DocLite, DocWithRawTerms, Term}
+import com.frankandrobot.chen.DocTypes.{Doc, DocLite, Term}
 import com.frankandrobot.chen.cluster.ClusterAnalysis
 
 import scala.collection.mutable.{ArrayBuffer, HashMap}
@@ -13,7 +13,7 @@ class TermStore(clusterAnalysis: ClusterAnalysis) {
   def terms() = _termList
   def termMap() = _termMap
 
-  def add(rawTermsByDoc : Seq[DocWithRawTerms]) = {
+  def add(rawTermsByDoc : Seq[Doc]) = {
 
     rawTermsByDoc.foreach(docRawTerms => {
 

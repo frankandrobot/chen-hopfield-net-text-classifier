@@ -1,6 +1,6 @@
 package com.frankandrobot.chen.docs
 
-import com.frankandrobot.chen.DocTypes.DocWithRawTerms
+import com.frankandrobot.chen.DocTypes.Doc
 
 
 /**
@@ -8,16 +8,16 @@ import com.frankandrobot.chen.DocTypes.DocWithRawTerms
   */
 class RawTermsByDocStore {
 
-  private var _docs = List[DocWithRawTerms]()
+  private var _docs = List[Doc]()
 
   def docs() = _docs
 
-  def add(docRawTerms : DocWithRawTerms) : Unit = {
+  def add(docRawTerms : Doc) : Unit = {
 
     _docs = docRawTerms :: _docs
   }
 
-  def add(rawTermsByDoc: Seq[DocWithRawTerms]) : Unit = {
+  def add(rawTermsByDoc: Seq[Doc]) : Unit = {
 
     rawTermsByDoc.foreach(add)
   }

@@ -10,9 +10,9 @@ package object DocTypes {
     */
   case class DocId(val id : String)
 
-  case class Doc(val docId : DocId,
-                 val title : String,
-                 val contents : String) {
+  case class RawDoc(val docId : DocId,
+                    val title : String,
+                    val contents : String) {
 
     def toDocLite() = {
       DocLite(
@@ -43,8 +43,8 @@ package object DocTypes {
     * @param doc
     * @param terms
     */
-  case class DocWithRawTerms(val doc : DocLite,
-                             val terms: List[RawTerm])
+  case class Doc(val doc : DocLite,
+                 val terms: List[RawTerm])
 
   case class Term(val index : Int, override val value : String, val docs : Set[DocLite]) extends RawTerm(value)
 }

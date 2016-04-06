@@ -1,6 +1,6 @@
 package com.frankandrobot.chen.cluster
 
-import com.frankandrobot.chen.DocTypes.{DocWithRawTerms, RawTerm}
+import com.frankandrobot.chen.DocTypes.{Doc, RawTerm}
 import com.frankandrobot.chen.docs.RawTermsByDocStore
 import com.frankandrobot.chen.utils.Memoize._
 
@@ -11,14 +11,14 @@ import scala.annotation.tailrec
 
 class ClusterAnalysis(rawTermsByDocStore : RawTermsByDocStore) {
 
-  def termFrequency(docWithRawTerms: DocWithRawTerms, rawTerm : RawTerm) : Int = {
+  def termFrequency(docWithRawTerms: Doc, rawTerm : RawTerm) : Int = {
 
     val histogram = _histogramFn(docWithRawTerms)
 
     histogram.getOrElse(rawTerm.value, 0)
   }
 
-  def termFrequency(docWithRawTerms: DocWithRawTerms, rawTerm1 : RawTerm, rawTerm2 : RawTerm) : Int = {
+  def termFrequency(docWithRawTerms: Doc, rawTerm1 : RawTerm, rawTerm2 : RawTerm) : Int = {
 
     termFrequency(docWithRawTerms, rawTerm1) + termFrequency(docWithRawTerms, rawTerm2)
   }
@@ -46,7 +46,7 @@ class ClusterAnalysis(rawTermsByDocStore : RawTermsByDocStore) {
     * @param docWithRawTerms
     * @return
     */
-  private def _histogram(docWithRawTerms: DocWithRawTerms): collection.Map[String, Int] = {
+  private def _histogram(docWithRawTerms: Doc): collection.Map[String, Int] = {
 
     val hash = collection.mutable.HashMap.empty[String, Int] withDefaultValue 0
     docWithRawTerms.terms foreach { cur => hash(cur.value) += 1 }
@@ -87,8 +87,8 @@ class ClusterAnalysis(rawTermsByDocStore : RawTermsByDocStore) {
   @tailrec
   final def infoLossAnalysis(docIndexingTarget : Double = 0.90,
                              docFrequencyThreshold : Int = 1,
-                             prevDocs : List[DocWithRawTerms] = rawTermsByDocStore.docs,
-                             prevDiff : Double = 0) : List[DocWithRawTerms] = {
+                             prevDocs : List[Doc] = rawTermsByDocStore.docs,
+                             prevDiff : Double = 0) : List[Doc] = {
 
     val curDocs = prevDocs.filter( doc => {
 

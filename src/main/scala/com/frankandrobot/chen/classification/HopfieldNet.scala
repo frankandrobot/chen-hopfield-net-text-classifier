@@ -28,18 +28,20 @@ class HopfieldNet(termStore: TermStore,
 
             val _mu : (Int, Int) => Double = mu(theta_j, theta_o, term.index)
 
-            val error = (t : Int) => (0 to n - 1).foldLeft(0.0){ (total, j) =>
+            val error = (t : Int) => List.tabulate(n - 1){ j =>
 
-              val x = _mu(j, t + 1) - _mu(j, t)
+              val x = _mu(j, t) - _mu(j, t - 1)
               x * x
-            }
 
-            var t = 0
-            while(error(t) > epsilon) { t += 1; println(error(t)) }
+            }.sum
+
+            var t = 1
+
+            while(error(t) > epsilon) { t += 1; }
 
             (0 to n - 1).foldLeft(List[Term]()){ (total, i) => {
 
-              _mu(i, t + 1) match {
+              _mu(i, t) match {
                 case m if m > 0 => termStore.terms()(i) :: total
                 case _ => total
               }
@@ -61,7 +63,8 @@ class HopfieldNet(termStore: TermStore,
         val _mu : (Int, Int) => Double = mu(theta_j, theta_o, inputIndex)
         val _fs : Double => Double = fs(theta_j, theta_o)
 
-        val sum = (0 to n - 1).foldLeft(0.0)((total, i) => total + connectionWeights.weights()(i, j) * _mu(i, t - 1))
+        val sum = List.tabulate(n - 1)(i => connectionWeights.weights()(i, j) * _mu(i, t - 1)).sum
+        // val sum = (0 to n - 1).foldLeft(0.0)((total, i) => total + connectionWeights.weights()(i, j) * _mu(i, t - 1))
 
         _fs(sum)
       }
