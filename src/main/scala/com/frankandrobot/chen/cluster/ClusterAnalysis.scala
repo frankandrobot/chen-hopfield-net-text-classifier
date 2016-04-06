@@ -40,18 +40,16 @@ class ClusterAnalysis(rawTermsByDocStore : RawTermsByDocStore) {
     _docFrequency2Fn(rawTerm1, rawTerm2)
   }
 
-  /*private def _histogram(docWithRawTerms: DocWithRawTerms) = {
-
-    val docTerms = docWithRawTerms.terms
-
-    docTerms.foldLeft(Map[String, Int]()) { (total, cur) => total + (cur.value -> (1 + total.getOrElse(cur.value, 0))) }
-  }*/
-
+  /**
+    * We use a mutable structure because when dealing with 1000s of terms, it's faster
+    *
+    * @param docWithRawTerms
+    * @return
+    */
   private def _histogram(docWithRawTerms: DocWithRawTerms): collection.Map[String, Int] = {
 
     val hash = collection.mutable.HashMap.empty[String, Int] withDefaultValue 0
     docWithRawTerms.terms foreach { cur => hash(cur.value) += 1 }
-    //println("Calculated histogram for " + docWithRawTerms.doc)
     hash
   }
 
@@ -64,10 +62,10 @@ class ClusterAnalysis(rawTermsByDocStore : RawTermsByDocStore) {
 
     rawTermsByDocStore.docs.foldLeft(0) { (total, cur) => {
 
-      val term1Occurs = termFrequency(cur, rawTerm1) > 0
-      lazy val term2Occurs = termFrequency(cur, rawTerm2) > 0
+      val termOneOccurs = termFrequency(cur, rawTerm1) > 0
+      lazy val termTwoOccurs = termFrequency(cur, rawTerm2) > 0
 
-      total + (if (term1Occurs && term2Occurs) {1} else {0})
+      total + (if (termOneOccurs && termTwoOccurs) {1} else {0})
     }}
   }
 
