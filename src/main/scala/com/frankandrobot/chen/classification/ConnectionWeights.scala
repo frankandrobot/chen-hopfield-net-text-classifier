@@ -6,7 +6,8 @@ import com.frankandrobot.chen.cluster.ClusterWeights
 import com.frankandrobot.chen.docs.{RawTermsByDocStore, TermStore}
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, Future}
 import scala.util.control.Breaks._
 
 
@@ -17,7 +18,23 @@ class ConnectionWeights(termStore: TermStore,
 
   def n() = termStore.terms.length
 
-  lazy val weights = DenseMatrix.zeros[Double](termStore.terms.length, termStore.terms.length)
+  private lazy val _weightMatrix = DenseMatrix.zeros[Double](termStore.terms.length, termStore.terms.length)
+  private var _init = false
+
+  def weights() = {
+
+    if (!_init) {
+
+      // force load of weight matrix
+      _weightMatrix(0, 0) = 0.0
+
+      // waiting OK since nothing can happen until this calculation completes
+      Await.result(_calculateWeights(), Duration.Inf)
+      _init = true
+    }
+
+    _weightMatrix
+  }
 
   /**
     * This is the main function
@@ -67,7 +84,7 @@ class ConnectionWeights(termStore: TermStore,
     val X = x._1 to x._2 - 1
     val Y = y._1 to y._2 - 1
 
-    X foreach { j => Y foreach { k => weights(j, k) = _weight(j, k)}}
+    X foreach { j => Y foreach { k => _weightMatrix(j, k) = _weight(j, k)}}
   }
 
   /**
@@ -75,10 +92,7 @@ class ConnectionWeights(termStore: TermStore,
     *
     * @return
     */
-  def calculateWeights() = {
-
-    // force load of weight matrix
-    weights(0, 0) = 0.0
+  private def _calculateWeights() = {
 
     val cores = Runtime.getRuntime().availableProcessors()
     val max = if (n % cores == 0) { cores - 1} else { cores }
@@ -98,5 +112,4 @@ class ConnectionWeights(termStore: TermStore,
   }
 
   type Strip = (Int, Int)
-
 }

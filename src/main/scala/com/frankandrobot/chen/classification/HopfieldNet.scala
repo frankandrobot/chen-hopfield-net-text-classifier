@@ -61,7 +61,7 @@ class HopfieldNet(termStore: TermStore,
         val _mu : (Int, Int) => Double = mu(theta_j, theta_o, inputIndex)
         val _fs : Double => Double = fs(theta_j, theta_o)
 
-        val sum = (0 to n - 1).foldLeft(0.0)((total, i) => total + connectionWeights.weights(i, j) * _mu(i, t - 1))
+        val sum = (0 to n - 1).foldLeft(0.0)((total, i) => total + connectionWeights.weights()(i, j) * _mu(i, t - 1))
 
         _fs(sum)
       }
