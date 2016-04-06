@@ -5,6 +5,8 @@ import com.frankandrobot.chen.DocTypes.DocWithRawTerms
 import com.frankandrobot.chen.docs.{RawTermsByDocStore, TermStore}
 
 import scala.math.log10
+import scala.util.control.Breaks._
+
 
 class ClusterWeights(termStore: TermStore,
                      clusterAnalysis: ClusterAnalysis,
@@ -28,14 +30,33 @@ class ClusterWeights(termStore: TermStore,
 
   lazy val weights = DenseMatrix.tabulate(termStore.terms.length, termStore.terms.length){ case (j, k) =>
 
-    val num = rawTermsByDocStore.docs.foldLeft(0.0)(_ + weight(_, j, k))
-    val denom = rawTermsByDocStore.docs.foldLeft(0.0)(_ + weight(_, j))
+    val num = ClusterWeights._shortcircuitSum(rawTermsByDocStore.docs, (doc : DocWithRawTerms) => weight(doc, j, k))
+    val denom = ClusterWeights._shortcircuitSum(rawTermsByDocStore.docs, (doc : DocWithRawTerms) => weight(doc, j))
 
     val w = num / denom
 
-    // println(j, k, w)
+    //println(j, k, w)
 
-    if (w > threshold) { w }
-    else { 0.0 }
+    if (w <= threshold || w.isNaN) { 0.0 }
+    else { w }
+  }
+}
+
+object ClusterWeights {
+
+  private def _shortcircuitSum(docs : Seq[DocWithRawTerms], it : DocWithRawTerms => Double) : Double = {
+
+    var sum = 0.0
+    var quant = 0.0
+
+    breakable { for (i <- docs) {
+
+      quant = it(i)
+
+      if (quant.isNaN) break
+      else sum += quant
+    } }
+
+    sum
   }
 }

@@ -51,9 +51,7 @@ class ClusterAnalysis(rawTermsByDocStore : RawTermsByDocStore) {
 
     val hash = collection.mutable.HashMap.empty[String, Int] withDefaultValue 0
     docWithRawTerms.terms foreach { cur => hash(cur.value) += 1 }
-
-    println("Calculated histogram for " + docWithRawTerms.doc)
-
+    //println("Calculated histogram for " + docWithRawTerms.doc)
     hash
   }
 
@@ -89,7 +87,7 @@ class ClusterAnalysis(rawTermsByDocStore : RawTermsByDocStore) {
     * @return
     */
   @tailrec
-  final def infoLossAnalysis(docIndexingTarget : Double = 0.9,
+  final def infoLossAnalysis(docIndexingTarget : Double = 0.90,
                              docFrequencyThreshold : Int = 1,
                              prevDocs : List[DocWithRawTerms] = rawTermsByDocStore.docs,
                              prevDiff : Double = 0) : List[DocWithRawTerms] = {
