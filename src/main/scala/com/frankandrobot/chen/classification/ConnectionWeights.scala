@@ -3,7 +3,7 @@ package com.frankandrobot.chen.classification
 import breeze.linalg.DenseMatrix
 import com.frankandrobot.chen.DocTypes.Doc
 import com.frankandrobot.chen.cluster.ClusterWeights
-import com.frankandrobot.chen.docs.{RawTermsByDocStore, TermStore}
+import com.frankandrobot.chen.docs.{DocStore, TermStore}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
@@ -12,7 +12,7 @@ import scala.util.control.Breaks._
 
 
 class ConnectionWeights(termStore: TermStore,
-                        rawTermsByDocStore: RawTermsByDocStore,
+                        rawTermsByDocStore: DocStore,
                         clusterWeights: ClusterWeights,
                         threshold : Double = 0.1) {
 

@@ -1,14 +1,14 @@
 package com.frankandrobot.chen.cluster
 
 import com.frankandrobot.chen.DocTypes.Doc
-import com.frankandrobot.chen.docs.{RawTermsByDocStore, TermStore}
+import com.frankandrobot.chen.docs.{DocStore, TermStore}
 
 import scala.math.log10
 
 
 class ClusterWeights(termStore: TermStore,
                      clusterAnalysis: ClusterAnalysis,
-                     rawTermsByDocStore: RawTermsByDocStore) {
+                     rawTermsByDocStore: DocStore) {
 
   def weight(docWithRawTerms : Doc, termIndex : Int) = {
 

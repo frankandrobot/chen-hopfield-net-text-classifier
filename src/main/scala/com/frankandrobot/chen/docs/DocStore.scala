@@ -1,21 +1,24 @@
 package com.frankandrobot.chen.docs
 
-import com.frankandrobot.chen.DocTypes.{Doc, DocId, RawDoc, RawTerm}
-import com.frankandrobot.chen.indexer.Indexer
+import com.frankandrobot.chen.DocTypes.Doc
 
 
-class DocStore(indexer : Indexer) {
+/**
+  * The raw terms grouped by doc
+  */
+class DocStore {
 
-  private var _docs = List[RawDoc]()
+  private var _docs = List[Doc]()
 
   def docs() = _docs
 
-  def add(id : String, title : String, doc : String) = {
+  def add(docRawTerms : Doc) : Unit = {
 
-    _docs = RawDoc(DocId(id), title, doc) :: _docs
+    _docs = docRawTerms :: _docs
   }
 
-  def extractDocRawTerms() = _docs.map(index)
+  def add(rawTermsByDoc: Seq[Doc]) : Unit = {
 
-  def index(doc : RawDoc) = Doc(doc.toDocLite, indexer.index(doc.title + ". " +doc.contents).map(RawTerm(_)))
+    rawTermsByDoc.foreach(add)
+  }
 }

@@ -1,7 +1,7 @@
 package com.frankandrobot.chen.cluster
 
 import com.frankandrobot.chen.DocTypes.{Doc, RawTerm}
-import com.frankandrobot.chen.docs.RawTermsByDocStore
+import com.frankandrobot.chen.docs.DocStore
 import com.frankandrobot.chen.utils.Memoize._
 
 import scala.annotation.tailrec
@@ -9,7 +9,7 @@ import scala.annotation.tailrec
 // TODO use lazy views
 // TODO replace nested cases with monads
 
-class ClusterAnalysis(rawTermsByDocStore : RawTermsByDocStore) {
+class ClusterAnalysis(rawTermsByDocStore : DocStore) {
 
   def termFrequency(docWithRawTerms: Doc, rawTerm : RawTerm) : Int = {
 
