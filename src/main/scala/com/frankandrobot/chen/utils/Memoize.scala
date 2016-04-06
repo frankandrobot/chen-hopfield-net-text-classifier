@@ -1,5 +1,7 @@
 package com.frankandrobot.chen.utils
 
+import java.util.concurrent.ConcurrentHashMap
+
 /**
   * A memoized unary function.
   *
@@ -8,14 +10,13 @@ package com.frankandrobot.chen.utils
   * @param [R] the return type
   */
 class Memoize1[-T, +R](f: T => R) extends (T => R) {
-  import scala.collection.mutable
   // map that stores (argument, result) pairs
-  private[this] val vals = mutable.Map.empty[T, R]
+  private[this] val vals = new ConcurrentHashMap[T, R]
 
   // Given an argument x,
   //   If vals contains x return vals(x).
   //   Otherwise, update vals so that vals(x) == f(x) and return f(x).
-  def apply(x: T): R = vals getOrElseUpdate (x, f(x))
+  def apply(x: T): R = { vals.putIfAbsent(x, f(x)); vals.get(x) }
 }
 
 object Memoize {
