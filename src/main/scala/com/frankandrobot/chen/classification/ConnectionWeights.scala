@@ -4,7 +4,7 @@ import breeze.linalg.DenseMatrix
 import com.frankandrobot.chen.DocTypes.Doc
 import com.frankandrobot.chen.cluster.ClusterWeights
 import com.frankandrobot.chen.docs.{DocStore, TermStore}
-import com.frankandrobot.chen.utils.Memoize._
+import com.frankandrobot.chen.utils.MyMath
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
@@ -12,7 +12,7 @@ import scala.concurrent.{Await, Future}
 
 
 class ConnectionWeights(termStore: TermStore,
-                        rawTermsByDocStore: DocStore,
+                        docStore: DocStore,
                         clusterWeights: ClusterWeights,
                         threshold : Double = 0.1) {
 
@@ -45,8 +45,8 @@ class ConnectionWeights(termStore: TermStore,
     */
   private def _weight(j : Int, k : Int) : Double = {
 
-   val num = _shortcircuitSum(rawTermsByDocStore.docs, (doc : Doc) => clusterWeights.weight(doc, j, k))
-   val denom = _shortcircuitSum(rawTermsByDocStore.docs, (doc : Doc) => clusterWeights.weight(doc, j))
+   val num = MyMath.sum(docStore.docs, (doc : Doc) => clusterWeights.weight(doc, j, k))
+   val denom = MyMath.sum(docStore.docs, (doc : Doc) => clusterWeights.weight(doc, j))
 
     val w = num / denom
 
@@ -54,28 +54,6 @@ class ConnectionWeights(termStore: TermStore,
 
     if (w <= threshold || w.isNaN) { 0.0 }
     else { w }
-  }
-
-  private def _shortcircuitSumFn = memoize(_shortcircuitSum _)
-
-  /**
-    * Iterate thru each doc and call the given function. Sum the results and return 0.0 if ever NaN is encountered
-    *
-    * @param docs
-    * @param fn
-    * @return
-    */
-  private def _shortcircuitSum(docs : Seq[Doc], fn : Doc => Double) : Double = {
-
-    var sum = 0.0
-    var quant = 0.0
-
-    for (i <- docs) {
-
-      sum += fn(i)
-    }
-
-    sum
   }
 
   private def _blockWeight(x : Strip, y : Strip) = Future {
@@ -89,10 +67,11 @@ class ConnectionWeights(termStore: TermStore,
 
     X foreach { j => {
 
-      if (j == quarter) println("Quarter way there on", x, y);
-      if (j == quarter + quarter) println("Halfway way there on", x, y);
+      if (j == quarter) println("1/4 way there on", x, y);
+      if (j == quarter + quarter) println("1/2 way there on", x, y);
+      if (j == quarter + quarter + quarter) println("3/4 way there on", x, y);
 
-     // print(j, x, y)
+     //println(j, x, y)
 
       Y foreach { k => {
 
@@ -111,7 +90,7 @@ class ConnectionWeights(termStore: TermStore,
     */
   private def _calculateWeights() = {
 
-    val cores = Math.min(Runtime.getRuntime().availableProcessors(), 4)
+    val cores = Math.max(Runtime.getRuntime().availableProcessors() - 2, 1)
     val max = if (n % cores == 0) { cores - 1} else { cores }
     val stripWidth = n / cores
 
@@ -119,8 +98,9 @@ class ConnectionWeights(termStore: TermStore,
     // when n = 10, cores = 2 => max = 1, width = 5, patches = (0, 5), (5, 10)
 
     val strips = (0 to max).map(i => (i * stripWidth, Math.min((i + 1) * stripWidth, n)))
-    val blocks = for (x <- strips; y <- strips) yield (x,y)
+    val blocks = (for (x <- strips; y <- strips) yield (x,y))
 
+    println(blocks)
     // blocks.foreach(println)
 
     val calculateBlockWeights = blocks.map(block => _blockWeight(block._1, block._2))
