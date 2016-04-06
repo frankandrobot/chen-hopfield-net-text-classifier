@@ -44,7 +44,8 @@ package object DocTypes {
     * @param terms
     */
   case class Doc(val doc : DocLite,
-                 val terms: List[RawTerm])
+                 val terms : List[RawTerm],
+                 val histogram : collection.Map[String, Int])
 
   case class Term(val index : Int, override val value : String, val docs : Set[DocLite]) extends RawTerm(value)
 }
