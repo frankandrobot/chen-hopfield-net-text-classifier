@@ -15,9 +15,9 @@ object Concurrent {
     *
     * @return
     */
-  def concurrentMap[T, R](list: IndexedSeq[T],
-                          action: T => R,
-                          maxCores: Int = Runtime.getRuntime.availableProcessors) = {
+  def map[T, R](list: IndexedSeq[T],
+                action: T => R,
+                maxCores: Int = Runtime.getRuntime.availableProcessors) = {
 
     val cores = Math.min(Runtime.getRuntime().availableProcessors(), maxCores)
     val n = list.length
@@ -33,7 +33,7 @@ object Concurrent {
 
       val range = strip._1 to strip._2 - 1
 
-      println("Starting", strip)
+      // println("Starting", strip)
 
       Future(range.map(i => {
         action(list(i))
@@ -43,9 +43,9 @@ object Concurrent {
     Future.sequence(calculation).map(_ flatten)
   }
 
-  def concurrentSum[T](list : Seq[T],
-                       fn : T => Double,
-                       maxCores: Int = Runtime.getRuntime.availableProcessors) = {
+  def sum[T](list : Seq[T],
+             fn : T => Double,
+             maxCores: Int = Runtime.getRuntime.availableProcessors) = {
 
     val cores = Math.min(Runtime.getRuntime().availableProcessors(), maxCores)
     val n = list.length
@@ -61,7 +61,7 @@ object Concurrent {
 
       val range = strip._1 to strip._2 - 1
 
-      println("Starting", strip)
+      // println("Starting", strip)
 
       Future(FMath.sum(range, (i : Int) => fn(list(i))))
     })
