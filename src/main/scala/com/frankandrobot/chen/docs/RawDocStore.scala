@@ -19,7 +19,7 @@ class RawDocStore(indexer : Indexer) {
     _docs = RawDoc(DocId(id), title, doc) +: _docs
   }
 
-  def toDocs() = Await.result(Concurrent.concurrentMap(_docs, _index), Duration.Inf)
+  def toDocs() = Await.result(Concurrent.map(_docs, _index), Duration.Inf)
 
   private def _index(doc : RawDoc) = {
 
