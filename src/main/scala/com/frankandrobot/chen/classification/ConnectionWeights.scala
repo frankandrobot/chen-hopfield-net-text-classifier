@@ -4,7 +4,8 @@ import breeze.linalg.DenseMatrix
 import com.frankandrobot.chen.DocTypes.Doc
 import com.frankandrobot.chen.cluster.ClusterWeights
 import com.frankandrobot.chen.docs.{DocStore, TermStore}
-import com.frankandrobot.chen.utils.MyMath
+import com.frankandrobot.chen.utils.FMath
+import com.frankandrobot.chen.utils.Memoize._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
@@ -45,8 +46,8 @@ class ConnectionWeights(termStore: TermStore,
     */
   private def _weight(j : Int, k : Int) : Double = {
 
-   val num = MyMath.sum(docStore.docs, (doc : Doc) => clusterWeights.weight(doc, j, k))
-   val denom = MyMath.sum(docStore.docs, (doc : Doc) => clusterWeights.weight(doc, j))
+   val num = FMath.sum(docStore.docs, (doc : Doc) => clusterWeights.weight(doc, j, k))
+   val denom = _denomFn(j)
 
     val w = num / denom
 
@@ -55,6 +56,10 @@ class ConnectionWeights(termStore: TermStore,
     if (w <= threshold || w.isNaN) { 0.0 }
     else { w }
   }
+
+  private def _denum(j : Int) = FMath.sum(docStore.docs, (doc : Doc) => clusterWeights.weight(doc, j))
+
+  private def _denomFn = memoize(_denum _)
 
   private def _blockWeight(x : Strip, y : Strip) = Future {
 

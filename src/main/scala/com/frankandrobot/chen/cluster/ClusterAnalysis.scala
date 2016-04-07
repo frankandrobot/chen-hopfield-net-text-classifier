@@ -2,7 +2,8 @@ package com.frankandrobot.chen.cluster
 
 import com.frankandrobot.chen.DocTypes.{Doc, RawTerm}
 import com.frankandrobot.chen.docs.DocStore
-import com.frankandrobot.chen.utils.MyMath
+import com.frankandrobot.chen.utils.FMath
+import com.frankandrobot.chen.utils.Memoize._
 
 import scala.annotation.tailrec
 
@@ -30,12 +31,19 @@ class ClusterAnalysis(docStore : DocStore) {
     */
   def docFrequency(rawTerm : RawTerm) : Int = {
 
-    MyMath.sum(docStore.docs, (doc : Doc) => { if (termFrequency(doc, rawTerm) > 0) {1} else {0}} )
+    _docFrequencyFn(rawTerm)
   }
+
+  private def _docFrequency(rawTerm : RawTerm) : Int = {
+
+    FMath.sum(docStore.docs, (doc : Doc) => { if (termFrequency(doc, rawTerm) > 0) {1} else {0}} )
+  }
+
+  private def _docFrequencyFn = memoize(_docFrequency _)
 
   def docFrequency(rawTerm1 : RawTerm, rawTerm2 : RawTerm) = {
 
-    MyMath.sum(docStore.docs, (doc : Doc) => {
+    FMath.sum(docStore.docs, (doc : Doc) => {
 
       if (termFrequency(doc, rawTerm1) > 0 && termFrequency(doc, rawTerm2) > 0) {1} else {0}
     })
