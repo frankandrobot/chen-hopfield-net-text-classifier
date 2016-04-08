@@ -10,16 +10,11 @@ import scala.annotation.tailrec
 // TODO use lazy views
 // TODO replace nested cases with monads
 
-class ClusterAnalysis(docStore : DocStore) {
+class ClusterAnalysis(val docStore : DocStore) {
 
   def termFrequency(doc: Doc, rawTerm : RawTerm) : Int = {
 
     doc.histogram.getOrElse(rawTerm.value, 0)
-  }
-
-  def termFrequency(doc: Doc, rawTerm1 : RawTerm, rawTerm2 : RawTerm) : Int = {
-
-    termFrequency(doc, rawTerm1) + termFrequency(doc, rawTerm2)
   }
 
   /**
@@ -40,14 +35,6 @@ class ClusterAnalysis(docStore : DocStore) {
   }
 
   private def _docFrequencyFn = memoize(_docFrequency _)
-
-  def docFrequency(rawTerm1 : RawTerm, rawTerm2 : RawTerm) = {
-
-    FMath.sum(docStore.docs, (doc : Doc) => {
-
-      if (termFrequency(doc, rawTerm1) > 0 && termFrequency(doc, rawTerm2) > 0) {1} else {0}
-    })
-  }
 
   /**
     * Discard documents where all the terms have a docFrequency < docFrequencyThreshold
