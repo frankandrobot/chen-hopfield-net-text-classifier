@@ -39,14 +39,14 @@ class ClusterWeights(termStore: TermStore,
     })
   }
 
-  def weight(doc : Doc, termIndex : Int) = {
+  def weight(doc : Doc, termIndex : Int) : Double = {
 
     val term = termStore.terms()(termIndex)
 
     clusterAnalysis.termFrequency(doc, term) * log10(clusterAnalysis.docFrequency(term))
   }
 
-  def weight(doc: Doc, termIndex1 : Int, termIndex2 : Int) = {
+  def weight(doc: Doc, termIndex1 : Int, termIndex2 : Int) : Double = {
 
     if (termIndex1 != termIndex2) {
 

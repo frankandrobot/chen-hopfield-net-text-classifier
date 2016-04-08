@@ -26,7 +26,7 @@ class ClusterAnalysis(val docStore : DocStore) {
     */
   def docFrequency(rawTerm : RawTerm) : Int = {
 
-    _docFrequencyFn(rawTerm)
+    _docFrequency(rawTerm)
   }
 
   private def _docFrequency(rawTerm : RawTerm) : Int = {

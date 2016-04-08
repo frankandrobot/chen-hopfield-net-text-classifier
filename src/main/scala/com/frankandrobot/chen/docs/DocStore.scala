@@ -7,7 +7,6 @@ import com.frankandrobot.chen.DocTypes.Doc
   * The raw terms grouped by doc
   */
 class DocStore {
-
   private var _docs = List[Doc]()
 
   def docs() = _docs
@@ -21,4 +20,6 @@ class DocStore {
 
     rawTermsByDoc.foreach(add)
   }
+
+  def replace(newDocs: List[Doc]) = _docs = newDocs
 }

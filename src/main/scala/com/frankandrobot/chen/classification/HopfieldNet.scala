@@ -14,7 +14,17 @@ class HopfieldNet(termStore: TermStore,
 
   private def n() = termStore.terms.length
 
-  def relatedConcepts(word : String, theta_j : Double = 0.1, theta_o : Double = 0.01, epsilon : Double = 1.0) = {
+  /**
+    * Doesn't work on phrases.
+    * Doesn't work on words that haven't been indexed.
+    *
+    * @param word
+    * @param theta_j
+    * @param theta_o
+    * @param epsilon
+    * @return
+    */
+  def simpleFindRelatedTerms(word : String, theta_j : Double = 0.1, theta_o : Double = 0.01, epsilon : Double = 1.0) = {
 
     indexer.index(word) match {
 
@@ -39,17 +49,25 @@ class HopfieldNet(termStore: TermStore,
 
             while(error(t) > epsilon) { t += 1; }
 
-            (0 to n - 1).foldLeft(List[Term]()){ (total, i) => {
+            val matches = (0 to n - 1).foldLeft(List[Term]()){ (total, i) => {
 
               _mu(i, t) match {
                 case m if m > 0 => termStore.terms()(i) :: total
                 case _ => total
               }
             }}
+
+            _extractDocs(matches)
           }
         }
       }
     }
+
+  }
+
+  private def _extractDocs(list : Seq[Term]) = {
+
+    list.flatMap(term => term.docs.toList)
   }
 
   private def _lookup(term : String) = termStore.termMap.get(term)
