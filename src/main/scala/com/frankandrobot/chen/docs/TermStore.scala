@@ -13,16 +13,16 @@ class TermStore(clusterAnalysis: ClusterAnalysis) {
   def terms() = _termList
   def termMap() = _termMap
 
-  def add(rawTermsByDoc : Seq[Doc]) = {
+  def add(docs : Seq[Doc]) = {
 
-    rawTermsByDoc.foreach(docRawTerms => {
+    docs.foreach(doc => {
 
-      docRawTerms.terms.foreach(term => {
+      doc.terms.foreach(term => {
 
         _termMap.get(term.value) match {
-          case Some(x) => _termMap += (term.value -> Term(x.index, x.value, x.docs + docRawTerms.doc))
+          case Some(x) => _termMap += (term.value -> Term(x.index, x.value, x.docs + doc.doc))
           case _ => {
-            val newTerm = Term(_termList.length, term.value, Set[DocLite](docRawTerms.doc))
+            val newTerm = Term(_termList.length, term.value, Set[DocLite](doc.doc))
             _termMap += (term.value -> newTerm)
             _termList += newTerm
           }

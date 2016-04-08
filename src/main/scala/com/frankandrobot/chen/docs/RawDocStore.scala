@@ -23,7 +23,7 @@ class RawDocStore(indexer : Indexer) {
 
   private def _index(doc : RawDoc) = {
 
-    val tokens = new Indexer().index(doc.title + ". " + doc.contents).map(RawTerm(_))
+    val tokens = new Indexer().indexConsecutiveTerms(doc.title + ". " + doc.contents).map(RawTerm(_))
 
     Doc(doc.toDocLite, tokens, _histogram(tokens))
   }

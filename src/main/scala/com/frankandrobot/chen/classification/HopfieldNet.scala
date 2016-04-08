@@ -26,10 +26,10 @@ class HopfieldNet(termStore: TermStore,
     */
   def simpleFindRelatedTerms(word : String, theta_j : Double = 0.1, theta_o : Double = 0.01, epsilon : Double = 1.0) = {
 
-    indexer.index(word) match {
+    indexer.index(word).map(_._1).force match {
 
       case Nil => Nil
-      case foo :: rest => {
+      case foo => {
 
         _lookup(foo) match {
 
@@ -62,15 +62,17 @@ class HopfieldNet(termStore: TermStore,
         }
       }
     }
-
   }
 
   private def _extractDocs(list : Seq[Term]) = {
 
-    list.flatMap(term => term.docs.toList)
+    //val myOrdering = Ordering.fromLessThan[(Term, Int)](_._2 > _._2)
+    //val docs = TreeSet.empty(myOrdering)
+
+    list.flatMap(term => term.docs.toSet).toSet
   }
 
-  private def _lookup(term : String) = termStore.termMap.get(term)
+  private def _lookup(term : Seq[String]) = { termStore.termMap.get(term.mkString(" ")) }
 
   private def mu(theta_j : Double, theta_o : Double, inputIndex : Int)(j : Int, t : Int) : Double = {
 

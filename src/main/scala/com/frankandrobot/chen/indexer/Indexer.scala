@@ -23,9 +23,14 @@ class Indexer {
     * @param doc
     * @return
     */
-  def index(doc : String) : List[String] = {
+  def indexConsecutiveTerms(doc : String) : List[String] = {
 
-    val iteratee = List(doc)
+    return _consecutiveTerms(index(doc))
+  }
+
+  def index(doc : String) = {
+
+    List(doc)
       .map(_removeUrls)
       .map(_removeHashtagSymbol)
       .map(tokenizer.tokenize)
@@ -36,9 +41,8 @@ class Indexer {
       .filter(_filterDigits)
       .filter(_filterShortTokens)
       .map(stemmer.stem)
-
-    return _consecutiveTerms(iteratee)
   }
+
 
   /**
     * Remove urls from document
@@ -178,7 +182,7 @@ class Stemmer {
 
   val i = new Indexer
 
-  //println(i.index("Some languages (like Haskell) are lazy: every expression’s evaluation waits for its (first) use.").toString)
-  println(i.index("one two, three four").reverse.toString)
-  println(i.index("one two, three four").length)
+  //println(i.indexConsecutiveTerms("Some languages (like Haskell) are lazy: every expression’s evaluation waits for its (first) use.").toString)
+  println(i.indexConsecutiveTerms("one two, three four").reverse.toString)
+  println(i.indexConsecutiveTerms("one two, three four").length)
 }*/

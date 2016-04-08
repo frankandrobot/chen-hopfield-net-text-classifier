@@ -73,13 +73,17 @@ class ConnectionWeights(termStore: TermStore,
       if (j == quarter + quarter) println("1/2 way there")
       if (j == quarter + quarter + quarter) println("3/4 way there")
 
-      println(j)
+      val start = System.currentTimeMillis
 
       range foreach { k => {
 
         _weightMatrix(j, k) = _weight(j, k)
 
       }}
+
+      val end = System.currentTimeMillis
+
+      println("time", end - start)
     }}
   }
 }

@@ -1,8 +1,7 @@
 package com.frankandrobot.chen.cluster
 
-import com.frankandrobot.chen.DocTypes.{Doc, RawTerm}
+import com.frankandrobot.chen.DocTypes.{Doc, RawTerm, Term}
 import com.frankandrobot.chen.docs.{DocStore, TermStore}
-import com.frankandrobot.chen.utils.FMath
 
 import scala.math.log10
 
@@ -31,12 +30,13 @@ class ClusterWeights(termStore: TermStore,
     * @param rawTerm2
     * @return
     */
-  private def _docFrequency(rawTerm1 : RawTerm, rawTerm2 : RawTerm) = {
+  private def _docFrequency(rawTerm1 : Term, rawTerm2 : Term) = {
 
-    FMath.sum(clusterAnalysis.docStore.docs, (doc : Doc) => {
+    (rawTerm1.docs intersect rawTerm2.docs).size
+    /*FMath.sum(clusterAnalysis.docStore.docs, (doc : Doc) => {
 
       if (clusterAnalysis.termFrequency(doc, rawTerm1) > 0 && clusterAnalysis.termFrequency(doc, rawTerm2) > 0) {1} else {0}
-    })
+    })*/
   }
 
   def weight(doc : Doc, termIndex : Int) : Double = {
