@@ -47,7 +47,8 @@ class ConnectionWeights(termStore: TermStore,
   private def _weight(j : Int, k : Int) : Double = {
 
    val num = Await.result(Concurrent.sum(docStore.docs, (doc : Doc) => clusterWeights.weight(doc, j, k)), Duration.Inf)
-   val denom = _denomFn(j)
+    // denom is defined similarly but memoized
+   val denom = _memoizedSumClusterWeights(j)
 
     val w = num / denom
 
@@ -57,37 +58,10 @@ class ConnectionWeights(termStore: TermStore,
     else { w }
   }
 
-  private def _denum(j : Int) =
+  private def _sumClusterWeights(j : Int) =
     Await.result(Concurrent.sum(docStore.docs, (doc : Doc) => clusterWeights.weight(doc, j)), Duration.Inf)
 
-  private def _denomFn = memoize(_denum _)
-
-  private def _blockWeight(x : Strip, y : Strip) = {
-
-    //println("Starting ", x, y)
-
-    val X = x._1 to x._2 - 1
-    val Y = y._1 to y._2 - 1
-
-    val quarter = (x._2 - x._1) / 4
-
-    X foreach { j => {
-
-      if (j == quarter) println("1/4 way there on", x, y);
-      if (j == quarter + quarter) println("1/2 way there on", x, y);
-      if (j == quarter + quarter + quarter) println("3/4 way there on", x, y);
-
-     println(j, x, y)
-
-      Y foreach { k => {
-
-        _weightMatrix(j, k) = _weight(j, k)
-
-      }}
-    }}
-
-    //println("Finished ", x, y)
-  }
+  private def _memoizedSumClusterWeights = memoize(_sumClusterWeights _)
 
   /**
     * Divide the matrix into blocks. Assign a CPU core to each block.
@@ -96,25 +70,23 @@ class ConnectionWeights(termStore: TermStore,
     */
   private def _calculateWeights() = {
 
-//    val cores = 1 //Math.max(Runtime.getRuntime().availableProcessors() - 2, 1)
-//    val max = if (n % cores == 0) { cores - 1} else { cores }
-//    val stripWidth = n / cores
-//
-//    // when n = 10, cores = 3 => max = 2, width = 3, patches = (0, 3) (3, 6) (6, 9) (9, 10)
-//    // when n = 10, cores = 2 => max = 1, width = 5, patches = (0, 5), (5, 10)
-//
-//    val strips = (0 to max).map(i => (i * stripWidth, Math.min((i + 1) * stripWidth, n)))
-//    val blocks = (for (x <- strips; y <- strips) yield (x,y))
-//
-//    println(blocks)
-//    // blocks.foreach(println)
-//
-//    val calculateBlockWeights = blocks.map(block => _blockWeight(block._1, block._2))
-//
-//    Future.sequence(calculateBlockWeights)
+    val range = 0 to n - 1
 
-    _blockWeight((0, n), (0, n))
+    val quarter = n / 4
+
+    range foreach { j => {
+
+      if (j == quarter) println("1/4 way there")
+      if (j == quarter + quarter) println("1/2 way there")
+      if (j == quarter + quarter + quarter) println("3/4 way there")
+
+      println(j)
+
+      range foreach { k => {
+
+        _weightMatrix(j, k) = _weight(j, k)
+
+      }}
+    }}
   }
-
-  type Strip = (Int, Int)
 }

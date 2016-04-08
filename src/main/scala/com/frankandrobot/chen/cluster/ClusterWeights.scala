@@ -19,7 +19,7 @@ class ClusterWeights(termStore: TermStore,
     * @param rawTerm2
     * @return
     */
-  private def termFrequency(doc: Doc, rawTerm1 : RawTerm, rawTerm2 : RawTerm) : Int = {
+  private def _termFrequency(doc: Doc, rawTerm1 : RawTerm, rawTerm2 : RawTerm) : Int = {
 
     clusterAnalysis.termFrequency(doc, rawTerm1) + clusterAnalysis.termFrequency(doc, rawTerm2)
   }
@@ -31,7 +31,7 @@ class ClusterWeights(termStore: TermStore,
     * @param rawTerm2
     * @return
     */
-  private def docFrequency(rawTerm1 : RawTerm, rawTerm2 : RawTerm) = {
+  private def _docFrequency(rawTerm1 : RawTerm, rawTerm2 : RawTerm) = {
 
     FMath.sum(clusterAnalysis.docStore.docs, (doc : Doc) => {
 
@@ -53,7 +53,7 @@ class ClusterWeights(termStore: TermStore,
       val term1 = termStore.terms()(termIndex1)
       val term2 = termStore.terms()(termIndex2)
 
-      termFrequency(doc, term1, term2) * log10(docFrequency(term1, term2))
+      _termFrequency(doc, term1, term2) * log10(_docFrequency(term1, term2))
     }
     else {
 
