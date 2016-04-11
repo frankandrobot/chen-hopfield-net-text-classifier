@@ -1,13 +1,13 @@
 package com.frankandrobot.chen
 
-import com.frankandrobot.chen.DocTypes.{RawDoc, Term}
+import com.frankandrobot.chen.DocTypes.RawDoc
 import com.frankandrobot.chen.classification.{ConnectionWeights, HopfieldNet, HopfieldNetParams}
 import com.frankandrobot.chen.cluster.{ClusterAnalysis, ClusterWeights}
 import com.frankandrobot.chen.docs.{DocStore, RawDocStore, TermStore}
 import com.frankandrobot.chen.indexer.Indexer
 
 
-class ChenHopfieldNet(params: Params) extends App {
+class ChenHopfieldNet(params: Params) {
 
   private val indexer = new Indexer()
   private val rawDocStore = new RawDocStore(indexer)
@@ -57,22 +57,20 @@ class ChenHopfieldNet(params: Params) extends App {
   }
 
   def stats() = Stats(
-    terms = termStore.terms,
     DocCount(docStore.docs.length),
     TermCount(termStore.terms.length),
     MatrixCalculationTime(matrixCalculateTime),
     params
   )
 
-  def lookup(term : String) = hopfieldNet.simpleFindRelatedTerms(term, params.hopfieldNetParams)
+  def lookup(term : String) = hopfieldNet.simpleFindRelatedTerms(term, params.hopfieldNetParams).take(20)
 }
 
 case class Params(docIndexingTarget : DocIndexingTarget,
                   hopfieldNetParams: HopfieldNetParams)
 case class DocIndexingTarget(value : Double = 0.9)
 
-case class Stats(terms : IndexedSeq[Term],
-                 docCount : DocCount,
+case class Stats(docCount : DocCount,
                  termCount : TermCount,
                  matrixCalculationTime : MatrixCalculationTime,
                  params: Params)

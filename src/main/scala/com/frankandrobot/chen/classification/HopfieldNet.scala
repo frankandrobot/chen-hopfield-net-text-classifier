@@ -72,7 +72,7 @@ class HopfieldNet(termStore: TermStore,
               }
             }}
 
-            _extractDocs(matches)
+            matches
           }
         }
       }

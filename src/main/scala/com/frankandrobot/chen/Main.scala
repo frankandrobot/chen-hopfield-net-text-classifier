@@ -26,7 +26,7 @@ object Main extends App {
     .map(contents => parse(contents))
     .map(json => json.extract[List[Tweet]])
     .flatten
-    .take(100)
+    .take(85)
 
   val params = Params(
     DocIndexingTarget(0.9),
