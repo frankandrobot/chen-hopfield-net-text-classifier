@@ -4,7 +4,7 @@ import breeze.linalg.DenseMatrix
 import com.frankandrobot.chen.DocTypes.Doc
 import com.frankandrobot.chen.cluster.ClusterWeights
 import com.frankandrobot.chen.docs.{DocStore, TermStore}
-import com.frankandrobot.chen.utils.Concurrent
+import com.frankandrobot.chen.utils.Parallel
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
@@ -45,8 +45,8 @@ class ConnectionWeights(termStore: TermStore,
     */
   private def _weight(j : Int, k : Int) : Double = {
 
-   val num = Await.result(Concurrent.sum(docStore.docs, (doc : Doc) => clusterWeights.weight(doc, j, k)), Duration.Inf)
-   val denom = Await.result(Concurrent.sum(docStore.docs, (doc : Doc) => clusterWeights.weight(doc, j)), Duration.Inf)
+   val num = Await.result(Parallel.sum(docStore.docs, (doc : Doc) => clusterWeights.weight(doc, j, k)), Duration.Inf)
+   val denom = Await.result(Parallel.sum(docStore.docs, (doc : Doc) => clusterWeights.weight(doc, j)), Duration.Inf)
 
     val w = num / denom
 

@@ -20,7 +20,7 @@ class ClusterWeights(termStore: TermStore,
     */
   private def _termFrequency(doc: Doc, rawTerm1 : RawTerm, rawTerm2 : RawTerm) : Int = {
 
-    clusterAnalysis.termFrequency(doc, rawTerm1) + clusterAnalysis.termFrequency(doc, rawTerm2)
+    Math.min(clusterAnalysis.termFrequency(doc, rawTerm1), clusterAnalysis.termFrequency(doc, rawTerm2))
   }
 
   /**
@@ -33,10 +33,6 @@ class ClusterWeights(termStore: TermStore,
   private def _docFrequency(rawTerm1 : Term, rawTerm2 : Term) = {
 
     (rawTerm1.docs intersect rawTerm2.docs).size
-    /*FMath.sum(clusterAnalysis.docStore.docs, (doc : Doc) => {
-
-      if (clusterAnalysis.termFrequency(doc, rawTerm1) > 0 && clusterAnalysis.termFrequency(doc, rawTerm2) > 0) {1} else {0}
-    })*/
   }
 
   def weight(doc : Doc, termIndex : Int) : Double = {

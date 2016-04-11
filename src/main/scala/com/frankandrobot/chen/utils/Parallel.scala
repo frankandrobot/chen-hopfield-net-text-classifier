@@ -4,7 +4,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 
-object Concurrent {
+object Parallel {
 
   /**
     * This is #map if it ran in parallel.

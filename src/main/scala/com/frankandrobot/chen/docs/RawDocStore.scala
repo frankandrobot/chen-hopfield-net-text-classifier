@@ -2,7 +2,7 @@ package com.frankandrobot.chen.docs
 
 import com.frankandrobot.chen.DocTypes.{Doc, DocId, RawDoc, RawTerm}
 import com.frankandrobot.chen.indexer.Indexer
-import com.frankandrobot.chen.utils.Concurrent
+import com.frankandrobot.chen.utils.Parallel
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
@@ -14,12 +14,14 @@ class RawDocStore(indexer : Indexer) {
 
   def docs() = _docs
 
+  def add(rawDoc: RawDoc) = _docs = rawDoc +: _docs
+
   def add(id : String, title : String, doc : String) = {
 
     _docs = RawDoc(DocId(id), title, doc) +: _docs
   }
 
-  def toDocs() = Await.result(Concurrent.map(_docs, _index), Duration.Inf)
+  def toDocs() = Await.result(Parallel.map(_docs, _index), Duration.Inf)
 
   private def _index(doc : RawDoc) = {
 

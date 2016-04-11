@@ -34,7 +34,7 @@ class ClusterAnalysis(val docStore : DocStore) {
     FMath.sum(docStore.docs, (doc : Doc) => { if (termFrequency(doc, rawTerm) > 0) {1} else {0}} )
   }
 
-  private def _docFrequencyFn = memoize(_docFrequency _)
+  private def _memoizedDocFrequency = memoize(_docFrequency _)
 
   /**
     * Discard documents where all the terms have a docFrequency < docFrequencyThreshold
