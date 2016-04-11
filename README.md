@@ -22,7 +22,7 @@ It outputs what it thinks are related terms for various input terms.
 ## How it works
 
 1. Extract terms (aka indexes)
-```java
+ ```java
   def index(doc : String) = {
 
     List(doc)
@@ -40,11 +40,12 @@ It outputs what it thinks are related terms for various input terms.
       // then apply a stemmer
       .map(stemmer.stem)
   }
-```
+ ```
+
 2. Generate a histogram of term frequency for each document
 3. Iteratively eliminate documents whose terms don't appear enough until you've
    met a `docIndexingTarget`. This method is a way of reducing the sample space.
-```java
+ ```java
 @tailrec
 final def infoLossAnalysis(docIndexingTarget : Double = 0.90,
                            docFrequencyThreshold : Int = 1,
@@ -70,6 +71,7 @@ final def infoLossAnalysis(docIndexingTarget : Double = 0.90,
   return infoLossAnalysis(docIndexingTarget, docFrequencyThreshold + 1, curDocs, diff)
 }
 ```
+
 4. Define functions that do all the grunt work.
  - `termFrequency(doc, term)` = number of times the term occurs in the doc
  - `docFrequency(term)` = number of docs where the term occurs
@@ -93,6 +95,7 @@ final def infoLossAnalysis(docIndexingTarget : Double = 0.90,
  termFrequency(term1, term2) = termFrequency(term2, term1)
  docFrequency(term1, term2) = docFrequency(term2, term1)
  ```
+
 5. Define more functions to help calculate the weights:
  - `weight(doc, term) = termFrequency(doc, term) * log10(docFrequency(term))`
  - `weight(doc, term1, term2) = termFrequency(doc, term1, term2) * log10(docFrequency(term1, term2))`
@@ -102,6 +105,7 @@ final def infoLossAnalysis(docIndexingTarget : Double = 0.90,
  -  Since we're taking logs, these functions are undefined when the doc frequencies are 0. In `#infoLossAnalysis`, we eliminate low scoring terms so this isn't a problem for `#weight(doc, term)`. However, it does become a problem for the other weight function. See below for details.
  -  `weight(doc, term1, term2) <= weight(doc, term1)`.
     Therefore, `weight(doc, term1, term2) / weight(doc, term1) <= 1`
+
 6. Define the weights (aka cluster weights):
  - `W(j, k) = sum[weight(doc, term_j, term_k)] / sum[weight(doc, term_j)]` where the sums are over all the docs
 
