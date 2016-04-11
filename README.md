@@ -2,9 +2,21 @@
 
 Based on "Automatic Concept Classification of Text from Electronic Meetings" by H. Chen and others.
 
-Takes a set of documents and groups related terms into clusters. The main limitation is that if a term does not exist in the original input, the algorithm won't know what to do with it.
+Takes a set of documents and groups related terms into clusters.
+The main limitation is that if a term does not exist in the original input,
+the algorithm won't know what to do with it.
 
-If I recall correctly, a hopfield net partitions the vector space into clusters. Then given an arbitrary vector, it finds its associated cluster. Chen's algorithm partitions a *finite* subspace into clusters. Therefore if you give the algorithm a point *not in the input set*, it won't know what to do.
+If I recall correctly, a hopfield net partitions the vector space into clusters.
+Then given an arbitrary vector, it finds its associated cluster.
+Chen's algorithm partitions a *finite* subspace into clusters.
+Therefore if you give the algorithm a point *not in the input set*,
+it won't know what to do.
+
+## Running
+Run `Main.scala`. It is pre-programmed to process several hundreds tweets
+(see `resources/data`).
+It outputs what it thinks are related terms for various input terms.
+(See Main.scala)
 
 ## How it works
 
@@ -30,7 +42,8 @@ If I recall correctly, a hopfield net partitions the vector space into clusters.
 ```
 
 2. Generate a histogram of term frequency for each document
-3. Iteratively eliminate documents whose terms don't appear enough until you've met a `docIndexingTarget`. This method is a way of reducing the sample space.
+3. Iteratively eliminate documents whose terms don't appear enough until you've
+   met a `docIndexingTarget`. This method is a way of reducing the sample space.
 ```java
 @tailrec
 final def infoLossAnalysis(docIndexingTarget : Double = 0.90,
@@ -66,14 +79,16 @@ final def infoLossAnalysis(docIndexingTarget : Double = 0.90,
 
  *Notes:*
 
- a) `termFrequency(doc, term1) <= termFrequency(doc, term1, term2)`
- b) `docFrequency(term1, term2) <= docFrequency(term1)`
- c) if term1 = term2, then
+ -  We need `termFrequency(doc, term1, term2) <= termFrequency(doc, term1)`.
+    Therefore, we define `termFrequency(doc, term1, term2) = min[termFrequency(doc, term1), termFrequency(doc, term2)]`.
+    (Unfortunately, this is unclear in Chen's original paper.)
+ -  `docFrequency(term1, term2) <= docFrequency(term1)`
+ -  if term1 = term2, then
  ```
  termFrequency(term1, term2) = termFrequency(term1)
  docFrequency(term1, term2) = docFrequency(term1)
  ```
- d) It is always true that:
+ -  It is always true that:
  ```
  termFrequency(term1, term2) = termFrequency(term2, term1)
  docFrequency(term1, term2) = docFrequency(term2, term1)
@@ -85,7 +100,9 @@ final def infoLossAnalysis(docIndexingTarget : Double = 0.90,
 
  *Notes*:
 
- Since we're taking logs, these functions are undefined when the doc frequencies are 0. In `#infoLossAnalysis`, we eliminate low scoring terms so this isn't a problem for `#weight(doc, term)`. However, it does become a problem for the other weight function. See below for details.
+ -  Since we're taking logs, these functions are undefined when the doc frequencies are 0. In `#infoLossAnalysis`, we eliminate low scoring terms so this isn't a problem for `#weight(doc, term)`. However, it does become a problem for the other weight function. See below for details.
+ -  `weight(doc, term1, term2) <= weight(doc, term1)`.
+    Therefore, `weight(doc, term1, term2) / weight(doc, term1) <= 1`
 
 6. Define the weights (aka cluster weights):
  - `W(j, k) = sum[weight(doc, term_j, term_k)] / sum[weight(doc, term_j)]` where the sums are over all the docs
@@ -93,3 +110,12 @@ final def infoLossAnalysis(docIndexingTarget : Double = 0.90,
  *Notes*:
 
  Chen's original algorithm doesn't specify what happens when `#weight(doc, term1, term2)` is undefined. Since log(x) approaches negative infinity from the right, and points with negative weights are unrelated in a hopfield net, it makes sense to make `W(j, k)` = 0 whenever the numerator returns an undefined value (alternatively, setting it to negative infinity would also work)
+
+## Summary
+
+One limitation is the running time to compute the weights---at least O(n^2).
+However, once it calculates the weights, querying similar terms is much quicker.
+The other limitation is that getting results that are reasonable requires
+fine tuning the parameters---unfortunately, it is not clear how these should
+be tuned, nor (and more importantly) is it clear that once tuned, the parameters
+will work for other similar data sets.
