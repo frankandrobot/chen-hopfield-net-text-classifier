@@ -3,14 +3,15 @@
 Based on "Automatic Concept Classification of Text from Electronic Meetings" by H. Chen and others.
 
 Takes a set of documents and groups related terms into clusters.
-The main limitation is that if a term does not exist in the original input,
-the algorithm won't know what to do with it.
+The main limitations are:
 
-If I recall correctly, a hopfield net partitions the vector space into clusters.
-Then given an arbitrary vector, it finds its associated cluster.
-Chen's algorithm partitions a *finite* subspace into clusters.
-Therefore if you give the algorithm a point *not in the input set*,
-it won't know what to do.
+1. if a term does not exist in the original input, the algorithm won't know what to do with it.
+2. it is super slow. The running time to compute the weights is at least O(n^2).
+   (However, once it calculates the weights, querying related terms is much quicker.)
+3. getting reasonable results requires fine tuning the parameters---
+   unfortunately, it is not clear how these should be tuned, 
+   nor (and more importantly) is it clear that once tuned, the parameters
+   will work for similar data sets.
 
 ## Running
 Run `Main.scala`. It is pre-programmed to process several hundreds tweets
@@ -40,7 +41,6 @@ It outputs what it thinks are related terms for various input terms.
       .map(stemmer.stem)
   }
 ```
-
 2. Generate a histogram of term frequency for each document
 3. Iteratively eliminate documents whose terms don't appear enough until you've
    met a `docIndexingTarget`. This method is a way of reducing the sample space.
@@ -70,11 +70,11 @@ final def infoLossAnalysis(docIndexingTarget : Double = 0.90,
   return infoLossAnalysis(docIndexingTarget, docFrequencyThreshold + 1, curDocs, diff)
 }
 ```
-
 4. Define functions that do all the grunt work.
  - `termFrequency(doc, term)` = number of times the term occurs in the doc
  - `docFrequency(term)` = number of docs where the term occurs
- - `termFrequency(doc, term1, term2)` = number of times both terms occur in the doc i.e., `termFrequency(doc, term1) + termFrequency(doc, term2)`
+ - `termFrequency(doc, term1, term2)` = number of times both terms occur in the doc
+   i.e., `termFrequency(doc, term1) + termFrequency(doc, term2)`
  - `docFrequency(term1, term2)` = number of docs where both terms occur.
 
  *Notes:*
@@ -93,7 +93,6 @@ final def infoLossAnalysis(docIndexingTarget : Double = 0.90,
  termFrequency(term1, term2) = termFrequency(term2, term1)
  docFrequency(term1, term2) = docFrequency(term2, term1)
  ```
-
 5. Define more functions to help calculate the weights:
  - `weight(doc, term) = termFrequency(doc, term) * log10(docFrequency(term))`
  - `weight(doc, term1, term2) = termFrequency(doc, term1, term2) * log10(docFrequency(term1, term2))`
@@ -103,19 +102,9 @@ final def infoLossAnalysis(docIndexingTarget : Double = 0.90,
  -  Since we're taking logs, these functions are undefined when the doc frequencies are 0. In `#infoLossAnalysis`, we eliminate low scoring terms so this isn't a problem for `#weight(doc, term)`. However, it does become a problem for the other weight function. See below for details.
  -  `weight(doc, term1, term2) <= weight(doc, term1)`.
     Therefore, `weight(doc, term1, term2) / weight(doc, term1) <= 1`
-
 6. Define the weights (aka cluster weights):
  - `W(j, k) = sum[weight(doc, term_j, term_k)] / sum[weight(doc, term_j)]` where the sums are over all the docs
 
  *Notes*:
 
  Chen's original algorithm doesn't specify what happens when `#weight(doc, term1, term2)` is undefined. Since log(x) approaches negative infinity from the right, and points with negative weights are unrelated in a hopfield net, it makes sense to make `W(j, k)` = 0 whenever the numerator returns an undefined value (alternatively, setting it to negative infinity would also work)
-
-## Summary
-
-One limitation is the running time to compute the weights---at least O(n^2).
-However, once it calculates the weights, querying similar terms is much quicker.
-The other limitation is that getting results that are reasonable requires
-fine tuning the parameters---unfortunately, it is not clear how these should
-be tuned, nor (and more importantly) is it clear that once tuned, the parameters
-will work for other similar data sets.
